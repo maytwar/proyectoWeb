@@ -1,11 +1,299 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Pagina Noticia</h1>
-</body>
-</html>
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Detalle de la noticia | CANACO Noticias{% endblock %}
+
+{% block content %}
+
+<!-- DETALLE DE NOTICIA -->
+<div class="container-fluid py-5">
+    <div class="container py-4">
+
+        <div class="row g-5">
+
+            <!-- ========================= -->
+            <!-- CONTENIDO DE LA NOTICIA -->
+            <!-- ========================= -->
+
+            <div class="col-lg-8">
+
+                <!-- Categoría -->
+                <span class="badge bg-primary mb-3">
+                    Tecnología
+                </span>
+
+                <!-- Título -->
+                <h1 class="display-5 mb-3">
+                    Título de la noticia
+                </h1>
+
+                <!-- Información -->
+                <div class="text-muted mb-4">
+
+                    <span class="me-3">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Fecha
+                    </span>
+
+                    <span class="me-3">
+                        <i class="fas fa-folder me-2"></i>
+                        Tecnología
+                    </span>
+
+                    <span>
+                        <i class="fas fa-eye me-2"></i>
+                        Visitas: 4
+                    </span>
+
+                </div>
+
+
+                <!-- Imagen principal -->
+                <img src="{% static 'img/news-1.jpg' %}"
+                     class="img-fluid rounded w-100 mb-4"
+                     style="height: 450px; object-fit: cover;"
+                     alt="Noticia">
+
+
+                <!-- Resumen -->
+                <h3 class="mb-3">
+                    Resumen de la noticia
+                </h3>
+
+                <p class="fs-5 text-muted">
+                    Lorem Ipsum es simplemente el texto de relleno de las
+                    imprentas y archivos de texto. Lorem Ipsum ha sido el
+                    texto de relleno estándar de las industrias desde el año 1500.
+                </p>
+
+
+                <!-- Contenido -->
+                <h3 class="mt-5 mb-3">
+                    Noticia
+                </h3>
+
+                <p>
+                    Al contrario del pensamiento popular, el texto de Lorem
+                    Ipsum no es simplemente texto aleatorio. Tiene sus raíces
+                    en una pieza clásica de la literatura del latín que data
+                    del año 45 antes de Cristo.
+                </p>
+
+                <p>
+                    Aquí se mostrará el contenido completo de la noticia
+                    publicada por CANACO. Posteriormente esta información
+                    podrá obtenerse directamente desde la base de datos.
+                </p>
+
+
+                <!-- ========================= -->
+                <!-- GALERÍA -->
+                <!-- ========================= -->
+
+                <h3 class="mt-5 mb-4">
+                    Galería
+                </h3>
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <img src="{% static 'img/news-1.jpg' %}"
+                             class="img-fluid rounded w-100"
+                             style="height: 200px; object-fit: cover;"
+                             alt="Galería">
+                    </div>
+
+                    <div class="col-md-4">
+                        <img src="{% static 'img/news-2.jpg' %}"
+                             class="img-fluid rounded w-100"
+                             style="height: 200px; object-fit: cover;"
+                             alt="Galería">
+                    </div>
+
+                    <div class="col-md-4">
+                        <img src="{% static 'img/news-3.jpg' %}"
+                             class="img-fluid rounded w-100"
+                             style="height: 200px; object-fit: cover;"
+                             alt="Galería">
+                    </div>
+
+                </div>
+
+
+                <!-- ========================= -->
+                <!-- COMENTARIOS -->
+                <!-- ========================= -->
+
+                <div class="mt-5">
+
+                    <h3 class="mb-4">
+                        Comentarios
+                    </h3>
+
+                    <!-- Comentario de ejemplo -->
+                    <div class="border-bottom pb-3 mb-4">
+
+                        <div class="d-flex align-items-center mb-2">
+
+                            <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
+
+                            <div>
+                                <strong>Usuario Alfredo</strong>
+                                <div class="text-muted small">
+                                    Fecha
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <p class="mb-0">
+                            Me gustó la noticia.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Formulario -->
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+
+                            <label for="contenido"
+                                   class="form-label">
+                                Agregar comentario
+                            </label>
+
+                            <textarea name="contenido"
+                                      id="contenido"
+                                      rows="4"
+                                      class="form-control"
+                                      placeholder="Escribe tu comentario..."
+                                      required></textarea>
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary">
+
+                            Agregar comentario
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================= -->
+            <!-- COLUMNA DERECHA -->
+            <!-- ========================= -->
+
+            <div class="col-lg-4">
+
+                <!-- OTRAS NOTICIAS -->
+
+                <div class="bg-light rounded p-4 mb-4">
+
+                    <h4 class="mb-4">
+                        Otras noticias
+                    </h4>
+
+
+                    <!-- Noticia lateral 1 -->
+                    <div class="d-flex mb-4">
+
+                        <img src="{% static 'img/news-2.jpg' %}"
+                             class="rounded me-3"
+                             style="width: 90px; height: 90px; object-fit: cover;"
+                             alt="Noticia">
+
+                        <div>
+
+                            <span class="text-muted small">
+                                Tecnología
+                            </span>
+
+                            <h6 class="mt-1">
+                                Otra noticia de CANACO
+                            </h6>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Noticia lateral 2 -->
+                    <div class="d-flex">
+
+                        <img src="{% static 'img/news-3.jpg' %}"
+                             class="rounded me-3"
+                             style="width: 90px; height: 90px; object-fit: cover;"
+                             alt="Noticia">
+
+                        <div>
+
+                            <span class="text-muted small">
+                                Eventos
+                            </span>
+
+                            <h6 class="mt-1">
+                                Información reciente
+                            </h6>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CATEGORÍAS -->
+
+                <div class="bg-light rounded p-4">
+
+                    <h4 class="mb-4">
+                        Categorías
+                    </h4>
+
+                    <div class="d-flex flex-column">
+
+                        <a href="#"
+                           class="border-bottom py-2 text-dark">
+
+                            <i class="fas fa-angle-right text-primary me-2"></i>
+                            Tecnología
+
+                        </a>
+
+                        <a href="#"
+                           class="border-bottom py-2 text-dark">
+
+                            <i class="fas fa-angle-right text-primary me-2"></i>
+                            Eventos
+
+                        </a>
+
+                        <a href="#"
+                           class="py-2 text-dark">
+
+                            <i class="fas fa-angle-right text-primary me-2"></i>
+                            Empresarial
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock content %}

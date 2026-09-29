@@ -1,0 +1,30 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Panel | CANACO Noticias{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-5">
+    <div class="container py-4">
+
+        <div class="row g-4">
+
+            <!-- SIDEBAR -->
+            <div class="col-lg-3">
+                {% include 'partials/sidebar.html' %}
+            </div>
+
+            <!-- CONTENIDO -->
+            <div class="col-lg-9">
+
+                {% block panel_content %}
+                {% endblock panel_content %}
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock content %}

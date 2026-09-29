@@ -1,0 +1,265 @@
+{% load static %}
+
+<!-- Navbar start -->
+<div class="container-fluid sticky-top px-0">
+
+    <!-- Barra superior -->
+    <div class="container-fluid topbar bg-dark d-none d-lg-block">
+        <div class="container px-0">
+            <div class="topbar-top d-flex justify-content-between flex-lg-wrap">
+
+                <div class="top-info flex-grow-0">
+
+                    <span class="rounded-circle btn-sm-square bg-primary me-2">
+                        <i class="fas fa-bolt text-white"></i>
+                    </span>
+
+                    <div class="pe-2 me-3 border-end border-white d-flex align-items-center">
+                        <p class="mb-0 text-white fs-6 fw-normal">
+                            Noticias
+                        </p>
+                    </div>
+
+                    <div class="overflow-hidden" style="width: 735px;">
+                        <div id="note" class="ps-2">
+
+                            <img src="{% static 'img/features-fashion.jpg' %}"
+                                 class="img-fluid rounded-circle border border-3 border-primary me-2"
+                                 style="width: 30px; height: 30px;"
+                                 alt="Noticia">
+
+                            <a href="#">
+                                <p class="text-white mb-0 link-hover">
+                                    Portal de noticias CANACO
+                                </p>
+                            </a>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="top-link flex-lg-wrap">
+
+                    <i class="fas fa-calendar-alt text-white border-end border-secondary pe-2 me-2">
+                        <span class="text-body">
+                            CANACO
+                        </span>
+                    </i>
+
+                    <div class="d-flex icon">
+
+                        <p class="mb-0 text-white me-2">
+                            Síguenos:
+                        </p>
+
+                        <a href="#" class="me-2">
+                            <i class="fab fa-facebook-f text-body link-hover"></i>
+                        </a>
+
+                        <a href="#" class="me-2">
+                            <i class="fab fa-instagram text-body link-hover"></i>
+                        </a>
+
+                        <a href="#" class="me-2">
+                            <i class="fab fa-youtube text-body link-hover"></i>
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Menú principal -->
+    <div class="container-fluid bg-light">
+
+        <div class="container px-0">
+
+            <nav class="navbar navbar-light navbar-expand-xl">
+
+                <!-- Logo -->
+                <a href="#" class="navbar-brand mt-3">
+
+                    <p class="text-primary display-6 mb-2"
+                       style="line-height: 0;">
+                        CANACO
+                    </p>
+
+                    <small class="text-body fw-normal"
+                           style="letter-spacing: 5px;">
+                        NOTICIAS
+                    </small>
+
+                </a>
+
+
+                <!-- Botón menú móvil -->
+                <button class="navbar-toggler py-2 px-3"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarCollapse">
+
+                    <span class="fa fa-bars text-primary"></span>
+
+                </button>
+
+
+                <!-- Opciones del menú -->
+                <div class="collapse navbar-collapse bg-light py-3"
+                     id="navbarCollapse">
+
+                    <div class="navbar-nav mx-auto border-top">
+
+                        <a href="#"
+                           class="nav-item nav-link active">
+                            Inicio
+                        </a>
+
+
+                        <!-- Categorías -->
+                        <div class="nav-item dropdown">
+
+                            <a href="#"
+                               class="nav-link dropdown-toggle"
+                               data-bs-toggle="dropdown">
+                                Categorías
+                            </a>
+
+                            <div class="dropdown-menu m-0 bg-secondary rounded-0">
+
+                                <a href="{% url 'home:categoria' %}"
+                                   class="dropdown-item">
+                                    Tecnología
+                                </a>
+
+                            </div>
+
+                        </div>
+
+
+                        <a href="{% url 'home:perfil' %}"
+                            class="nav-item nav-link">
+                            Perfil
+                        </a>
+
+                    </div>
+
+
+                    <!-- Usuario -->
+                    <div class="d-flex flex-nowrap border-top pt-3 pt-xl-0">
+
+                        {% if request.user.is_authenticated %}
+
+                            <div class="d-flex align-items-center me-3">
+
+                                <i class="fas fa-user-circle text-primary me-2"></i>
+
+                                <span class="text-body me-3">
+                                    {{ request.user.username }}
+                                </span>
+
+                                <a href="#"
+                                   class="btn btn-outline-primary">
+                                    Cerrar sesión
+                                </a>
+
+                            </div>
+
+                        {% else %}
+
+                            <div class="d-flex align-items-center me-3">
+
+                                <a href="{% url 'home:login' %}"
+                                   class="btn btn-outline-primary me-2">
+                                    Iniciar sesión
+                                </a>
+
+                                <a href="{% url 'home:sign_up' %}"
+                                    class="btn btn-primary">
+                                    Registro
+                                </a>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- Buscador -->
+                        <button class="btn-search btn border border-primary btn-md-square rounded-circle bg-white my-auto"
+                                data-bs-toggle="modal"
+                                data-bs-target="#searchModal">
+
+                            <i class="fas fa-search text-primary"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </nav>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- Navbar End -->
+
+
+<!-- Modal Search Start -->
+<div class="modal fade"
+     id="searchModal"
+     tabindex="-1"
+     aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-fullscreen">
+
+        <div class="modal-content rounded-0">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title"
+                    id="exampleModalLabel">
+                    Buscar noticias
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
+
+            </div>
+
+            <div class="modal-body d-flex align-items-center">
+
+                <div class="input-group w-75 mx-auto d-flex">
+
+                    <input type="search"
+                           class="form-control p-3"
+                           placeholder="Buscar noticia..."
+                           aria-describedby="search-icon-1">
+
+                    <span id="search-icon-1"
+                          class="input-group-text p-3">
+
+                        <i class="fa fa-search"></i>
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- Modal Search End -->

@@ -1,0 +1,105 @@
+{% load static %}
+
+{% with current=request.resolver_match.url_name %}
+
+<div class="bg-light rounded shadow-sm p-3">
+
+    <!-- Título -->
+    <div class="text-center border-bottom pb-3 mb-3">
+
+        <i class="fas fa-user-cog fa-2x text-primary mb-2"></i>
+
+        <h5 class="mb-0">
+            Panel de administración
+        </h5>
+
+    </div>
+
+
+    <!-- MENÚ -->
+    <div class="nav flex-column nav-pills">
+
+
+        <!-- MI PERFIL -->
+        <a href="{% url 'home:perfil' %}"
+           class="nav-link mb-2
+           {% if current == 'perfil' or current == 'crudPerfil' %}active{% endif %}">
+
+            <i class="fas fa-user me-2"></i>
+            Mi Perfil
+
+        </a>
+
+
+        <!-- NOTICIAS -->
+        <a href="{% url 'home:crudNoticias' %}"
+           class="nav-link mb-2
+           {% if current == 'crudNoticias' or current == 'crearPublicacion' %}active{% endif %}">
+
+            <i class="fas fa-newspaper me-2"></i>
+            Noticias
+
+        </a>
+
+
+        <!-- COMENTARIOS -->
+        <a href="{% url 'home:crudComentarios' %}"
+           class="nav-link mb-2
+           {% if current == 'crudComentarios' %}active{% endif %}">
+
+            <i class="fas fa-comments me-2"></i>
+            Comentarios
+
+        </a>
+
+
+        <!-- CATEGORÍAS -->
+        <a href="{% url 'home:crudCategorias' %}"
+           class="nav-link mb-2
+           {% if current == 'crudCategorias' %}active{% endif %}">
+
+            <i class="fas fa-folder me-2"></i>
+            Categorías
+
+        </a>
+
+
+        <!-- USUARIOS -->
+        <a href="{% url 'home:crudUsuarios' %}"
+           class="nav-link mb-2
+           {% if current == 'crudUsuarios' or current == 'crearUsuario' %}active{% endif %}">
+
+            <i class="fas fa-users me-2"></i>
+            Usuarios
+
+        </a>
+
+
+        <!-- CAMBIAR CONTRASEÑA -->
+        <a href="{% url 'home:crudCambiarContrasena' %}"
+           class="nav-link mb-3
+           {% if current == 'crudCambiarContrasena' %}active{% endif %}">
+
+            <i class="fas fa-key me-2"></i>
+            Cambiar contraseña
+
+        </a>
+
+
+        <hr>
+
+
+        <!-- CERRAR SESIÓN -->
+        <a href="{% url 'home:login' %}"
+           class="btn btn-danger w-100">
+
+            <i class="fas fa-sign-out-alt me-2"></i>
+            Cerrar sesión
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endwith %}

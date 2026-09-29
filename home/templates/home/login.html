@@ -1,11 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Pagina Login</h1>
-</body>
-</html>
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Iniciar sesión | CANACO Noticias{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-5">
+    <div class="container py-5">
+
+        <div class="row justify-content-center">
+
+            <div class="col-lg-5 col-md-7">
+
+                <div class="bg-light rounded p-5 shadow-sm">
+
+                    <!-- Encabezado -->
+                    <div class="text-center mb-4">
+
+                        <i class="fas fa-user-circle fa-4x text-primary mb-3"></i>
+
+                        <h2 class="fw-bold">
+                            Iniciar sesión
+                        </h2>
+
+                        <p class="text-muted">
+                            Ingresa a tu cuenta de CANACO Noticias
+                        </p>
+
+                    </div>
+
+
+                    <!-- Formulario -->
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        <!-- Correo -->
+                        <div class="mb-4">
+
+                            <label for="correo"
+                                   class="form-label fw-bold">
+                                Correo electrónico
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-envelope text-primary"></i>
+                                </span>
+
+                                <input type="email"
+                                       class="form-control p-3"
+                                       id="correo"
+                                       name="correo"
+                                       placeholder="ejemplo@correo.com"
+                                       required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Contraseña -->
+                        <div class="mb-4">
+
+                            <label for="password"
+                                   class="form-label fw-bold">
+                                Contraseña
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-lock text-primary"></i>
+                                </span>
+
+                                <input type="password"
+                                       class="form-control p-3"
+                                       id="password"
+                                       name="password"
+                                       placeholder="Ingresa tu contraseña"
+                                       required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Botón -->
+                        <div class="d-grid mb-4">
+
+                            <button type="submit"
+                                    class="btn btn-primary py-3">
+
+                                <i class="fas fa-sign-in-alt me-2"></i>
+
+                                Iniciar sesión
+
+                            </button>
+
+                        </div>
+
+
+                        <!-- Registro -->
+                        <div class="text-center">
+
+                            <p class="mb-2">
+                                ¿No tienes una cuenta?
+                            </p>
+
+                            <a href="{% url 'home:sign_up' %}"
+                               class="text-primary fw-bold">
+
+                                Crear cuenta
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock content %}

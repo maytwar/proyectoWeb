@@ -1,11 +1,185 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Pagina Sign Up</h1>
-</body>
-</html>
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Crear cuenta | CANACO Noticias{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-5">
+    <div class="container py-5">
+
+        <div class="row justify-content-center">
+
+            <div class="col-lg-6 col-md-8">
+
+                <div class="bg-light rounded p-5 shadow-sm">
+
+                    <!-- Encabezado -->
+                    <div class="text-center mb-4">
+
+                        <i class="fas fa-user-plus fa-4x text-primary mb-3"></i>
+
+                        <h2 class="fw-bold">
+                            Crear cuenta
+                        </h2>
+
+                        <p class="text-muted">
+                            Regístrate en CANACO Noticias
+                        </p>
+
+                    </div>
+
+
+                    <!-- Formulario -->
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+
+                        <!-- Nombre -->
+                        <div class="mb-4">
+
+                            <label for="nombre"
+                                   class="form-label fw-bold">
+                                Nombre
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-user text-primary"></i>
+                                </span>
+
+                                <input type="text"
+                                       class="form-control p-3"
+                                       id="nombre"
+                                       name="nombre"
+                                       placeholder="Ingresa tu nombre"
+                                       required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Correo -->
+                        <div class="mb-4">
+
+                            <label for="correo"
+                                   class="form-label fw-bold">
+                                Correo electrónico
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-envelope text-primary"></i>
+                                </span>
+
+                                <input type="email"
+                                       class="form-control p-3"
+                                       id="correo"
+                                       name="correo"
+                                       placeholder="ejemplo@correo.com"
+                                       required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Contraseña -->
+                        <div class="mb-4">
+
+                            <label for="password"
+                                   class="form-label fw-bold">
+                                Contraseña
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-lock text-primary"></i>
+                                </span>
+
+                                <input type="password"
+                                       class="form-control p-3"
+                                       id="password"
+                                       name="password"
+                                       placeholder="Ingresa una contraseña"
+                                       required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Confirmar contraseña -->
+                        <div class="mb-4">
+
+                            <label for="confirmar_password"
+                                   class="form-label fw-bold">
+                                Confirmar contraseña
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-lock text-primary"></i>
+                                </span>
+
+                                <input type="password"
+                                       class="form-control p-3"
+                                       id="confirmar_password"
+                                       name="confirmar_password"
+                                       placeholder="Confirma tu contraseña"
+                                       required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Botón registrarse -->
+                        <div class="d-grid mb-4">
+
+                            <button type="submit"
+                                    class="btn btn-primary py-3">
+
+                                <i class="fas fa-user-plus me-2"></i>
+
+                                Registrarse
+
+                            </button>
+
+                        </div>
+
+
+                        <!-- Regresar al login -->
+                        <div class="text-center">
+
+                            <p class="mb-2">
+                                ¿Ya tienes una cuenta?
+                            </p>
+
+                            <a href="{% url 'home:login' %}"
+                               class="text-primary fw-bold">
+
+                                Iniciar sesión
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock content %}
