@@ -1,11 +1,233 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Pagina Contactanos</h1>
-</body>
-</html>
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Contáctanos | CANACO Noticias{% endblock %}
+
+{% block content %}
+
+<!-- Encabezado -->
+<div class="container-fluid py-5 bg-light">
+    <div class="container text-center py-4">
+
+        <h1 class="fw-bold mb-3">
+            Contáctanos
+        </h1>
+
+        <p class="text-muted mb-0">
+            ¿Tienes alguna pregunta o comentario?
+            Ponte en contacto con nosotros.
+        </p>
+
+    </div>
+</div>
+
+
+<!-- Contacto -->
+<div class="container-fluid py-5">
+
+    <div class="container">
+
+        <div class="row g-5">
+
+
+            <!-- Información -->
+            <div class="col-lg-5">
+
+                <h3 class="fw-bold mb-4">
+                    Información de contacto
+                </h3>
+
+                <p class="text-muted mb-4">
+                    Si deseas comunicarte con CANACO Noticias,
+                    puedes enviarnos un mensaje mediante el formulario.
+                </p>
+
+
+                <!-- Dirección -->
+                <div class="d-flex align-items-start mb-4">
+
+                    <div class="me-3">
+                        <i class="fas fa-map-marker-alt
+                                  fa-2x text-primary"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="mb-1">
+                            Dirección
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            Villahermosa, Tabasco, México
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <!-- Correo -->
+                <div class="d-flex align-items-start mb-4">
+
+                    <div class="me-3">
+                        <i class="fas fa-envelope
+                                  fa-2x text-primary"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="mb-1">
+                            Correo electrónico
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            contacto@canaconoticias.com
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <!-- Teléfono -->
+                <div class="d-flex align-items-start">
+
+                    <div class="me-3">
+                        <i class="fas fa-phone-alt
+                                  fa-2x text-primary"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="mb-1">
+                            Teléfono
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            +52 993 000 0000
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Formulario -->
+            <div class="col-lg-7">
+
+                <div class="bg-light rounded p-4 p-md-5">
+
+                    <h3 class="fw-bold mb-4">
+                        Envíanos un mensaje
+                    </h3>
+
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+
+                        <div class="row g-3">
+
+
+                            <!-- Nombre -->
+                            <div class="col-md-6">
+
+                                <label for="nombre"
+                                       class="form-label fw-semibold">
+                                    Nombre
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="nombre"
+                                    name="nombre"
+                                    class="form-control"
+                                    placeholder="Tu nombre"
+                                    required>
+
+                            </div>
+
+
+                            <!-- Correo -->
+                            <div class="col-md-6">
+
+                                <label for="email"
+                                       class="form-label fw-semibold">
+                                    Correo electrónico
+                                </label>
+
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    class="form-control"
+                                    placeholder="correo@ejemplo.com"
+                                    required>
+
+                            </div>
+
+
+                            <!-- Asunto -->
+                            <div class="col-12">
+
+                                <label for="asunto"
+                                       class="form-label fw-semibold">
+                                    Asunto
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="asunto"
+                                    name="asunto"
+                                    class="form-control"
+                                    placeholder="Asunto del mensaje"
+                                    required>
+
+                            </div>
+
+
+                            <!-- Mensaje -->
+                            <div class="col-12">
+
+                                <label for="mensaje"
+                                       class="form-label fw-semibold">
+                                    Mensaje
+                                </label>
+
+                                <textarea
+                                    id="mensaje"
+                                    name="mensaje"
+                                    class="form-control"
+                                    rows="6"
+                                    placeholder="Escribe tu mensaje..."
+                                    required></textarea>
+
+                            </div>
+
+
+                            <!-- Botón -->
+                            <div class="col-12">
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary px-5 py-3">
+
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Enviar mensaje
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock content %}

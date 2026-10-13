@@ -1,11 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Pagina Cambiar Contraseña</h1>
-</body>
-</html>
+{% extends 'partials/sidebar_base.html' %}
+{% load static %}
+
+{% block title %}
+Cambiar Contraseña | CANACO Noticias
+{% endblock %}
+
+
+{% block panel_content %}
+
+<div class="bg-white rounded shadow-sm p-4 p-md-5">
+
+    <div class="text-center mb-4">
+
+        <div class="mb-3">
+            <i class="fas fa-key fa-3x text-primary"></i>
+        </div>
+
+        <h2 class="fw-bold">
+            Cambiar contraseña
+        </h2>
+
+        <p class="text-muted">
+            Esta acción modifica la contraseña de tu cuenta actual.
+        </p>
+
+        {% if request.user.is_authenticated %}
+
+            <p>
+                Usuario:
+                <strong>
+                    {{ request.user.username }}
+                </strong>
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags }}
+                        alert-dismissible fade show"
+                 role="alert">
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        <!-- Contraseña actual -->
+
+        <div class="mb-3">
+
+            <label
+                for="actual"
+                class="form-label fw-semibold">
+
+                Contraseña actual
+
+            </label>
+
+            <input
+                type="password"
+                id="actual"
+                name="actual"
+                class="form-control"
+                required>
+
+        </div>
+
+
+        <!-- Nueva contraseña -->
+
+        <div class="mb-3">
+
+            <label
+                for="nueva"
+                class="form-label fw-semibold">
+
+                Nueva contraseña
+
+            </label>
+
+            <input
+                type="password"
+                id="nueva"
+                name="nueva"
+                class="form-control"
+                required>
+
+        </div>
+
+
+        <!-- Confirmar -->
+
+        <div class="mb-4">
+
+            <label
+                for="confirmar"
+                class="form-label fw-semibold">
+
+                Confirmar contraseña
+
+            </label>
+
+            <input
+                type="password"
+                id="confirmar"
+                name="confirmar"
+                class="form-control"
+                required>
+
+        </div>
+
+
+        <div class="d-grid gap-2">
+
+            <button
+                type="submit"
+                class="btn btn-primary">
+
+                <i class="fas fa-key me-2"></i>
+                Actualizar contraseña
+
+            </button>
+
+
+            <a href="{% url 'home:perfil' %}"
+               class="btn btn-outline-secondary">
+
+                <i class="fas fa-arrow-left me-2"></i>
+                Volver a mi perfil
+
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock panel_content %}

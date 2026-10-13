@@ -1,11 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Pagina Editar Categoria</h1>
-</body>
-</html>
+{% extends 'partials/sidebar_base.html' %}
+{% load static %}
+
+{% block title %}Editar Categoría | CANACO Noticias{% endblock %}
+
+{% block panel_content %}
+
+<div class="bg-white rounded shadow-sm p-4 p-md-5">
+
+    <div class="text-center mb-4">
+
+        <div class="mb-3">
+            <i class="fas fa-folder-open fa-3x text-primary"></i>
+        </div>
+
+        <h2 class="fw-bold mb-2">
+            Editar categoría
+        </h2>
+
+        <p class="text-muted">
+            Modifica el nombre de la categoría seleccionada.
+        </p>
+
+    </div>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags }}
+                        alert-dismissible fade show"
+                 role="alert">
+
+                {{ message }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Cerrar">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        <div class="mb-4">
+
+            <label for="nombre"
+                   class="form-label fw-semibold">
+
+                <i class="fas fa-tag text-primary me-2"></i>
+                Nombre de la categoría
+
+            </label>
+
+            <input
+                type="text"
+                id="nombre"
+                name="nombre"
+                class="form-control"
+                value="{{ categoria.nombre|default:'' }}"
+                placeholder="Nombre de la categoría"
+                required>
+
+        </div>
+
+
+        <div class="d-grid gap-2">
+
+            <button type="submit"
+                    class="btn btn-primary">
+
+                <i class="fas fa-save me-2"></i>
+                Guardar cambios
+
+            </button>
+
+
+            <a href="{% url 'home:crudCategorias' %}"
+               class="btn btn-outline-secondary">
+
+                <i class="fas fa-arrow-left me-2"></i>
+                Volver a categorías
+
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock panel_content %}

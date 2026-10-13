@@ -1,11 +1,222 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Pagina Perfil</h1>
-</body>
-</html>
+{% extends 'partials/sidebar_base.html' %}
+{% load static %}
+
+{% block title %}Editar Perfil | CANACO Noticias{% endblock %}
+
+{% block panel_content %}
+
+<div class="bg-white rounded shadow-sm p-4 p-md-5">
+
+    <!-- Encabezado -->
+    <div class="text-center mb-4">
+
+        <div class="mb-3">
+            <i class="fas fa-user-edit fa-3x text-primary"></i>
+        </div>
+
+        <h2 class="fw-bold mb-2">
+            Editar mi perfil
+        </h2>
+
+        <p class="text-muted">
+            Actualiza la información de tu cuenta.
+        </p>
+
+    </div>
+
+
+    <!-- Mensajes -->
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags }}
+                        alert-dismissible fade show"
+                 role="alert">
+
+                {{ message }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Cerrar">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <!-- Formulario -->
+    <form method="POST" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+
+        <!-- Usuario -->
+        <div class="mb-3">
+
+            <label for="username"
+                   class="form-label fw-semibold">
+
+                <i class="fas fa-user text-primary me-2"></i>
+                Usuario
+
+            </label>
+
+            <input
+                type="text"
+                id="username"
+                name="username"
+                class="form-control"
+                value="{{ request.user.username|default:'' }}"
+                placeholder="Nombre de usuario"
+                required>
+
+        </div>
+
+
+        <!-- Correo -->
+        <div class="mb-3">
+
+            <label for="email"
+                   class="form-label fw-semibold">
+
+                <i class="fas fa-envelope text-primary me-2"></i>
+                Correo electrónico
+
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control"
+                value="{{ request.user.email|default:'' }}"
+                placeholder="correo@ejemplo.com"
+                required>
+
+        </div>
+
+
+        <!-- Nombre -->
+        <div class="mb-3">
+
+            <label for="first_name"
+                   class="form-label fw-semibold">
+
+                <i class="fas fa-id-card text-primary me-2"></i>
+                Nombre
+
+            </label>
+
+            <input
+                type="text"
+                id="first_name"
+                name="first_name"
+                class="form-control"
+                value="{{ request.user.first_name|default:'' }}"
+                placeholder="Nombre">
+
+        </div>
+
+
+        <!-- Apellidos -->
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label for="apellido_paterno"
+                       class="form-label fw-semibold">
+
+                    Apellido paterno
+
+                </label>
+
+                <input
+                    type="text"
+                    id="apellido_paterno"
+                    name="apellido_paterno"
+                    class="form-control"
+                    value="{{ perfil.apellido_paterno|default:'' }}"
+                    placeholder="Apellido paterno">
+
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+                <label for="apellido_materno"
+                       class="form-label fw-semibold">
+
+                    Apellido materno
+
+                </label>
+
+                <input
+                    type="text"
+                    id="apellido_materno"
+                    name="apellido_materno"
+                    class="form-control"
+                    value="{{ perfil.apellido_materno|default:'' }}"
+                    placeholder="Apellido materno">
+
+            </div>
+
+        </div>
+
+
+        <!-- Foto -->
+        <div class="mb-4">
+
+            <label for="foto"
+                   class="form-label fw-semibold">
+
+                <i class="fas fa-camera text-primary me-2"></i>
+                Foto de perfil
+
+            </label>
+
+            <input
+                type="file"
+                id="foto"
+                name="foto"
+                class="form-control"
+                accept="image/*">
+
+            <small class="text-muted">
+                Selecciona una imagen para tu perfil.
+            </small>
+
+        </div>
+
+
+        <!-- Botones -->
+        <div class="d-grid gap-2">
+
+            <button type="submit"
+                    class="btn btn-primary">
+
+                <i class="fas fa-save me-2"></i>
+                Guardar cambios
+
+            </button>
+
+
+            <a href="{% url 'home:perfil' %}"
+               class="btn btn-outline-secondary">
+
+                <i class="fas fa-times me-2"></i>
+                Cancelar
+
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock panel_content %}

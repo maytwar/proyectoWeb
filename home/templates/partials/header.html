@@ -20,7 +20,7 @@
                         </p>
                     </div>
 
-                    <div class="overflow-hidden" style="width: 735px;">
+                    <!--<div class="overflow-hidden" style="width: 735px;">
                         <div id="note" class="ps-2">
 
                             <img src="{% static 'img/features-fashion.jpg' %}"
@@ -35,7 +35,7 @@
                             </a>
 
                         </div>
-                    </div>
+                    </div> -->
 
                 </div>
 
@@ -82,18 +82,10 @@
             <nav class="navbar navbar-light navbar-expand-xl">
 
                 <!-- Logo -->
-                <a href="#" class="navbar-brand mt-3">
-
-                    <p class="text-primary display-6 mb-2"
-                       style="line-height: 0;">
-                        CANACO
-                    </p>
-
-                    <small class="text-body fw-normal"
-                           style="letter-spacing: 5px;">
-                        NOTICIAS
-                    </small>
-
+                <a href="{% url 'home:index' %}" class="navbar-brand">
+                    <h1 class="text-primary mb-0">
+                        CANACO NOTICIAS
+                    </h1>
                 </a>
 
 
