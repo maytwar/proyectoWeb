@@ -148,7 +148,22 @@
                 class="form-control"
                 id="imagen_portada"
                 name="imagen_portada"
-                accept="image/*">
+                accept="image/jpeg,image/png,image/webp">
+             
+                <!-- Vista previa de la portada -->
+<div id="preview-portada" class="mt-3" style="display: none;">
+
+    <p class="text-muted mb-2">Vista previa de la portada:</p>
+
+    <img
+        id="imagen-preview"
+        src=""
+        alt="Vista previa de la portada"
+        class="img-thumbnail"
+        style="width: 200px; height: 140px; object-fit: cover;"
+    >
+
+</div>
 
             {% if publicacion and publicacion.imagen_portada %}
                 <small class="text-muted">
@@ -166,16 +181,41 @@
                 Contenido
             </label>
 
-            <div
-                id="editor"
-                class="form-control"
-                style="height: 300px;">
+            <!-- Barra de herramientas -->
+                <div id="toolbar">
 
-                {% if publicacion %}
-                    {{ publicacion.contenido|safe }}
-                {% endif %}
+                 <select class="ql-header">
+            <option value="1">Título 1</option>
+            <option value="2">Título 2</option>
+            <option selected>Texto normal</option>
+        </select>
 
-            </div>
+        <button type="button" class="ql-bold"></button>
+        <button type="button" class="ql-italic"></button>
+        <button type="button" class="ql-underline"></button>
+        <button type="button" class="ql-strike"></button>
+
+        <select class="ql-color"></select>
+        <select class="ql-background"></select>
+
+        <button type="button" class="ql-list" value="ordered"></button>
+        <button type="button" class="ql-list" value="bullet"></button>
+
+        <select class="ql-align"></select>
+
+        <button type="button" class="ql-link"></button>
+        <button type="button" class="ql-image"></button>
+
+        <button type="button" class="ql-clean"></button>
+
+    </div>
+
+    <!-- Editor de texto -->
+    <div id="editor" style="height: 300px; background: white;">
+        {% if publicacion %}
+            {{ publicacion.contenido|safe }}
+        {% endif %}
+    </div>
 
             <input
                 type="hidden"
@@ -199,6 +239,11 @@
                 name="galeria"
                 accept="image/*"
                 multiple>
+
+        <!-- Vista previa de la galería -->
+<div id="preview-galeria" class="mt-3">
+
+</div>
 
         </div>
 
@@ -229,5 +274,27 @@
     </form>
 
 </div>
+
+{% block extra_css %}
+<link
+    href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css"
+    rel="stylesheet"
+>
+<style>
+    #toolbar {
+        background-color: #f8f9fa;
+        border-radius: 8px 8px 0 0;
+    }
+
+    #editor {
+        border-radius: 0 0 8px 8px;
+        font-size: 16px;
+    }
+
+    .ql-editor {
+        min-height: 280px;
+    }
+</style>
+{% endblock extra_css %}
 
 {% endblock panel_content %}
