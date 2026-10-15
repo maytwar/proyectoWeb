@@ -151,19 +151,19 @@
                 accept="image/jpeg,image/png,image/webp">
              
                 <!-- Vista previa de la portada -->
-<div id="preview-portada" class="mt-3" style="display: none;">
+        <div id="preview-portada" class="mt-3" style="display: none;">
 
-    <p class="text-muted mb-2">Vista previa de la portada:</p>
+            <p class="text-muted mb-2">Vista previa de la portada:</p>
 
-    <img
-        id="imagen-preview"
-        src=""
-        alt="Vista previa de la portada"
-        class="img-thumbnail"
-        style="width: 200px; height: 140px; object-fit: cover;"
-    >
+            <img
+                id="imagen-preview"
+                src=""
+                alt="Vista previa de la portada"
+                class="img-thumbnail"
+                style="width: 200px; height: 140px; object-fit: cover;"
+            >
 
-</div>
+        </div>
 
             {% if publicacion and publicacion.imagen_portada %}
                 <small class="text-muted">
@@ -217,12 +217,10 @@
         {% endif %}
     </div>
 
-            <input
-                type="hidden"
-                name="contenido"
-                id="contenido">
+    <!-- Campo oculto para enviar el contenido -->
+    <input type="hidden" name="contenido" id="contenido">
 
-        </div>
+</div>
 
 
         <!-- Galería -->
@@ -237,13 +235,13 @@
                 class="form-control"
                 id="galeria"
                 name="galeria"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 multiple>
 
         <!-- Vista previa de la galería -->
-<div id="preview-galeria" class="mt-3">
+        <div id="preview-galeria" class="mt-3">
 
-</div>
+        </div>
 
         </div>
 
@@ -275,6 +273,8 @@
 
 </div>
 
+{% endblock panel_content %}
+
 {% block extra_css %}
 <link
     href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css"
@@ -297,4 +297,127 @@
 </style>
 {% endblock extra_css %}
 
-{% endblock panel_content %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+
+<script>
+    const quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: '#toolbar'
+        },
+        placeholder: 'Escribe aquí el contenido de tu noticia...'
+    });
+
+    // Localizamos el formulario que contiene el editor.
+    const formulario = document.querySelector('#editor').closest('form');
+
+    formulario.addEventListener('submit', function(event) {
+        const contenido = document.getElementById('contenido');
+
+        // Guardamos el contenido con su formato HTML.
+        contenido.value = quill.getSemanticHTML();
+
+        // Evitamos enviar noticias sin contenido.P
+        if (quill.getText().trim().length === 0) {
+            event.preventDefault();
+            alert('Por favor, escribe el contenido de la noticia.');
+        }
+    });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ==========================
+    // VISTA PREVIA DE PORTADA
+    // ==========================
+
+    const inputPortada = document.getElementById('imagen_portada');
+    const previewPortada = document.getElementById('preview-portada');
+    const imagenPreview = document.getElementById('imagen-preview');
+
+    inputPortada.addEventListener('change', function () {
+
+        const archivo = this.files[0];
+
+        if (archivo) {
+
+            const urlImagen = URL.createObjectURL(archivo);
+
+            imagenPreview.src = urlImagen;
+
+            previewPortada.style.display = 'block';
+
+            imagenPreview.onload = function () {
+                URL.revokeObjectURL(urlImagen);
+            };
+
+        } else {
+
+            imagenPreview.removeAttribute('src');
+
+            previewPortada.style.display = 'none';
+
+        }
+
+    });
+
+
+    // ==========================
+    // VISTA PREVIA DE GALERÍA
+    // ==========================
+
+    const inputGaleria = document.getElementById('galeria');
+    const previewGaleria = document.getElementById('preview-galeria');
+
+    inputGaleria.addEventListener('change', function () {
+
+        // Limpiar vistas previas anteriores
+        previewGaleria.innerHTML = '';
+
+        const archivos = Array.from(this.files);
+
+        archivos.forEach(function (archivo) {
+
+            const urlImagen = URL.createObjectURL(archivo);
+
+            // Crear contenedor
+            const contenedor = document.createElement('div');
+
+            contenedor.className = 'd-inline-block m-2 text-center';
+
+            // Crear imagen
+            const imagen = document.createElement('img');
+
+            imagen.src = urlImagen;
+            imagen.className = 'img-thumbnail';
+
+            imagen.style.width = '130px';
+            imagen.style.height = '100px';
+            imagen.style.objectFit = 'cover';
+
+            imagen.onload = function () {
+                URL.revokeObjectURL(urlImagen);
+            };
+
+            // Mostrar nombre del archivo
+            const nombre = document.createElement('p');
+
+            nombre.className = 'small text-muted mt-1';
+            nombre.textContent = archivo.name;
+            nombre.style.maxWidth = '130px';
+            nombre.style.overflowWrap = 'anywhere';
+
+            contenedor.appendChild(imagen);
+            contenedor.appendChild(nombre);
+
+            previewGaleria.appendChild(contenedor);
+
+        });
+
+    });
+
+});
+</script>
+{% endblock extra_js %}

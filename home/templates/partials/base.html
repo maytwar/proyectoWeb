@@ -37,6 +37,8 @@
     <!-- Template Stylesheet -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
+    {% block extra_css %}{% endblock %}
+
 </head>
 
 <body>
@@ -72,6 +74,8 @@
 
     <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
 
 </body>
 
