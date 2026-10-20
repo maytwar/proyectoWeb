@@ -102,43 +102,71 @@
 
                 <!-- Opciones del menú -->
                 <div class="collapse navbar-collapse bg-light py-3"
-                     id="navbarCollapse">
+                    id="navbarCollapse">
 
                     <div class="navbar-nav mx-auto border-top">
 
-                        <a href="#"
-                           class="nav-item nav-link active">
+                        <!-- INICIO -->
+                        <a href="{% url 'home:index' %}"
+                        class="nav-item nav-link">
                             Inicio
                         </a>
 
 
-                        <!-- Categorías -->
+                        <!-- CATEGORÍAS -->
                         <div class="nav-item dropdown">
 
                             <a href="#"
-                               class="nav-link dropdown-toggle"
-                               data-bs-toggle="dropdown">
+                            class="nav-link dropdown-toggle"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+
                                 Categorías
+
                             </a>
 
                             <div class="dropdown-menu m-0 bg-secondary rounded-0">
+                                
+                                {% for categoria in categorias_menu %}
 
-                                <a href="{% url 'home:categoria' %}"
-                                   class="dropdown-item">
-                                    Tecnología
-                                </a>
+                                    <a href="{% url 'home:categoria' %}?categoria={{ categoria.id }}"
+                                    class="dropdown-item">
+
+                                        {{ categoria.nombre }}
+
+                                    </a>
+
+                                {% empty %}
+
+                                    <span class="dropdown-item text-muted">
+                                        No hay categorías disponibles
+                                    </span>
+
+                                {% endfor %}
 
                             </div>
 
                         </div>
 
 
-                        <a href="{% url 'home:perfil' %}"
+                        <!-- PERFIL -->
+                        {% if request.user.is_authenticated %}
+
+                            <a href="{% url 'home:perfil' %}"
                             class="nav-item nav-link">
-                            Perfil
-                        </a>
+
+                                <i class="fas fa-user-circle me-1"></i>
+                                Perfil
+
+                            </a>
+
+                        {% endif %}
 
                     </div>
+                    <!-- FIN DEL MENÚ DE NAVEGACIÓN -->
+
+
+    <!-- Usuario -->
 
 
                     <!-- Usuario -->
@@ -154,10 +182,22 @@
                                     {{ request.user.username }}
                                 </span>
 
-                                <a href="#"
-                                   class="btn btn-outline-primary">
-                                    Cerrar sesión
-                                </a>
+                                <!-- Cerrar sesión -->
+                                <form method="POST"
+                                    action="{% url 'home:logout' %}"
+                                    class="d-inline">
+
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="btn btn-outline-primary">
+
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        Cerrar sesión
+
+                                    </button>
+
+                                </form>
 
                             </div>
 

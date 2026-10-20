@@ -65,13 +65,11 @@ Cambiar Contraseña | CANACO Noticias
 
         {% csrf_token %}
 
-
         <!-- Contraseña actual -->
-
         <div class="mb-3">
 
             <label
-                for="actual"
+                for="password_actual"
                 class="form-label fw-semibold">
 
                 Contraseña actual
@@ -80,20 +78,20 @@ Cambiar Contraseña | CANACO Noticias
 
             <input
                 type="password"
-                id="actual"
-                name="actual"
+                id="password_actual"
+                name="password_actual"
                 class="form-control"
+                autocomplete="current-password"
                 required>
 
         </div>
 
 
         <!-- Nueva contraseña -->
-
         <div class="mb-3">
 
             <label
-                for="nueva"
+                for="password_nueva"
                 class="form-label fw-semibold">
 
                 Nueva contraseña
@@ -102,20 +100,19 @@ Cambiar Contraseña | CANACO Noticias
 
             <input
                 type="password"
-                id="nueva"
-                name="nueva"
+                id="password_nueva"
+                name="password_nueva"
                 class="form-control"
+                autocomplete="new-password"
                 required>
 
         </div>
 
-
-        <!-- Confirmar -->
-
+        <!-- Confirmar contraseña -->
         <div class="mb-4">
 
             <label
-                for="confirmar"
+                for="confirmar_password"
                 class="form-label fw-semibold">
 
                 Confirmar contraseña
@@ -124,9 +121,10 @@ Cambiar Contraseña | CANACO Noticias
 
             <input
                 type="password"
-                id="confirmar"
-                name="confirmar"
+                id="confirmar_password"
+                name="confirmar_password"
                 class="form-control"
+                autocomplete="new-password"
                 required>
 
         </div>

@@ -4,14 +4,34 @@
 
 <div class="bg-light rounded shadow-sm p-3">
 
-    <!-- Título -->
+    <!-- TÍTULO -->
     <div class="text-center border-bottom pb-3 mb-3">
 
-        <i class="fas fa-user-cog fa-2x text-primary mb-2"></i>
+        {% if request.user.is_superuser %}
 
-        <h5 class="mb-0">
-            Panel de administración
-        </h5>
+            <i class="fas fa-user-shield fa-2x text-primary mb-2"></i>
+
+            <h5 class="mb-0">
+                Panel de administración
+            </h5>
+
+        {% elif request.user.is_staff %}
+
+            <i class="fas fa-user-cog fa-2x text-primary mb-2"></i>
+
+            <h5 class="mb-0">
+                Panel de contenido
+            </h5>
+
+        {% else %}
+
+            <i class="fas fa-user-circle fa-2x text-primary mb-2"></i>
+
+            <h5 class="mb-0">
+                Mi cuenta
+            </h5>
+
+        {% endif %}
 
     </div>
 
@@ -20,7 +40,7 @@
     <div class="nav flex-column nav-pills">
 
 
-        <!-- MI PERFIL -->
+        <!-- MI PERFIL: TODOS LOS USUARIOS -->
         <a href="{% url 'home:perfil' %}"
            class="nav-link mb-2
            {% if current == 'perfil' or current == 'crudPerfil' %}active{% endif %}">
@@ -31,51 +51,61 @@
         </a>
 
 
-        <!-- NOTICIAS -->
-        <a href="{% url 'home:crudNoticias' %}"
-           class="nav-link mb-2
-           {% if current == 'crudNoticias' or current == 'crearPublicacion' %}active{% endif %}">
+        <!-- OPCIONES PARA PERSONAL AUTORIZADO -->
+        {% if request.user.is_staff %}
 
-            <i class="fas fa-newspaper me-2"></i>
-            Noticias
+            <!-- NOTICIAS -->
+            <a href="{% url 'home:crudNoticias' %}"
+               class="nav-link mb-2
+               {% if current == 'crudNoticias' or current == 'crearPublicacion' %}active{% endif %}">
 
-        </a>
+                <i class="fas fa-newspaper me-2"></i>
+                Noticias
 
-
-        <!-- COMENTARIOS -->
-        <a href="{% url 'home:crudComentarios' %}"
-           class="nav-link mb-2
-           {% if current == 'crudComentarios' %}active{% endif %}">
-
-            <i class="fas fa-comments me-2"></i>
-            Comentarios
-
-        </a>
+            </a>
 
 
-        <!-- CATEGORÍAS -->
-        <a href="{% url 'home:crudCategorias' %}"
-           class="nav-link mb-2
-           {% if current == 'crudCategorias' %}active{% endif %}">
+            <!-- COMENTARIOS -->
+            <a href="{% url 'home:crudComentarios' %}"
+               class="nav-link mb-2
+               {% if current == 'crudComentarios' %}active{% endif %}">
 
-            <i class="fas fa-folder me-2"></i>
-            Categorías
+                <i class="fas fa-comments me-2"></i>
+                Comentarios
 
-        </a>
-
-
-        <!-- USUARIOS -->
-        <a href="{% url 'home:crudUsuarios' %}"
-           class="nav-link mb-2
-           {% if current == 'crudUsuarios' or current == 'crearUsuario' %}active{% endif %}">
-
-            <i class="fas fa-users me-2"></i>
-            Usuarios
-
-        </a>
+            </a>
 
 
-        <!-- CAMBIAR CONTRASEÑA -->
+            <!-- CATEGORÍAS -->
+            <a href="{% url 'home:crudCategorias' %}"
+               class="nav-link mb-2
+               {% if current == 'crudCategorias' %}active{% endif %}">
+
+                <i class="fas fa-folder me-2"></i>
+                Categorías
+
+            </a>
+
+        {% endif %}
+
+
+        <!-- OPCIONES EXCLUSIVAS DEL ADMINISTRADOR -->
+        {% if request.user.is_superuser %}
+
+            <!-- USUARIOS -->
+            <a href="{% url 'home:crudUsuarios' %}"
+               class="nav-link mb-2
+               {% if current == 'crudUsuarios' or current == 'crearUsuario' %}active{% endif %}">
+
+                <i class="fas fa-users me-2"></i>
+                Usuarios
+
+            </a>
+
+        {% endif %}
+
+
+        <!-- CAMBIAR CONTRASEÑA: TODOS LOS USUARIOS -->
         <a href="{% url 'home:crudCambiarContrasena' %}"
            class="nav-link mb-3
            {% if current == 'crudCambiarContrasena' %}active{% endif %}">
@@ -90,13 +120,22 @@
 
 
         <!-- CERRAR SESIÓN -->
-        <a href="{% url 'home:login' %}"
-           class="btn btn-danger w-100">
+        <!-- CERRAR SESIÓN -->
+        <form method="POST" action="{% url 'home:logout' %}">
 
-            <i class="fas fa-sign-out-alt me-2"></i>
-            Cerrar sesión
+            {% csrf_token %}
 
-        </a>
+            <button
+                type="submit"
+                class="btn btn-danger w-100"
+                onclick="alert('El botón funciona');">
+
+                <i class="fas fa-sign-out-alt me-2"></i>
+                Cerrar sesión
+
+            </button>
+
+        </form>
 
     </div>
 

@@ -1,4 +1,5 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from . import views
 
 app_name = 'home'
@@ -7,7 +8,8 @@ urlpatterns = [
     path('base/', views.base, name='base'),
     path('contactanos/', views.contactanos, name='contactanos'),
     path('categoria/', views.categoria, name='categoria'),
-    path('login/', views.login, name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='home/login.html'),name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='home:login'),name='logout'),
     path('noticia/', views.noticia, name='noticia'),
     path('perfil/', views.perfil, name='perfil'),
     path('signup/', views.sign_up, name='sign_up'),
@@ -19,7 +21,10 @@ urlpatterns = [
     path('crudNoticias/', views.crud_noticias, name='crudNoticias'),
     path('crudPerfil/', views.crud_perfil, name='crudPerfil'),
     path('crudUsuarios/', views.crud_usuarios, name='crudUsuarios'),
-    path('editarCategoria/', views.editar_categoria, name='editarPerfil'),
+    path('editarUsuario/<int:usuario_id>/', views.editar_usuario, name='editarUsuario'),
+    path('cambiarEstadoUsuario/<int:usuario_id>/', views.cambiar_estado_usuario, name='cambiarEstadoUsuario'),
+    path('eliminarUsuario/<int:usuario_id>/', views.eliminar_usuario, name='eliminarUsuario'),
+    path('editarCategoria/', views.editar_categoria, name='editarCategoria'),
     
 
 

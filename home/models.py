@@ -2,6 +2,65 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+#MODELO ARCHIVO
+# MODELO ARCHIVO
+class Archivo(models.Model):
+
+    nombre = models.CharField(max_length=255)
+    nombre_temporal = models.CharField(max_length=255)
+    ruta = models.FileField(upload_to='uploads/')
+    tipo = models.CharField(max_length=100, blank=True)
+    tamano = models.PositiveIntegerField(default=0)
+
+    fk_user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    createdat = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = True
+        db_table = 'archivo'
+        verbose_name_plural = 'Archivo'
+
+    def __str__(self):
+        return self.nombre
+
+    @property
+    def display_url(self):
+
+        ruta = str(self.ruta)
+
+        if ruta.startswith((
+            'images/',
+            'css/',
+            'js/',
+            'fonts/',
+            'uploads/profile-default'
+        )):
+            return f'/static/{ruta}'
+
+        return self.ruta.url if self.ruta else ''
+
+#MODELO PERFIL
+class Perfil(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+    foto_perfil = models.ForeignKey(
+        Archivo,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+    apellido_paterno = models.CharField(max_length=80, blank=True)
+    apellido_materno = models.CharField(max_length=80, blank=True)
+
+
 # MODELO CATEGORIA
 class Categoria(models.Model):
     id = models.BigAutoField(
@@ -27,50 +86,6 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre
-
-
-# MODELO ARCHIVO
-class Archivo(models.Model):
-    nombre = models.CharField(max_length=255)
-    nombre_temporal = models.CharField(max_length=255)
-    ruta = models.FileField(upload_to='uploads/')
-    tipo = models.CharField(max_length=100, blank=True)
-    tamano = models.PositiveIntegerField(default=0)
-    fk_user = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-    createdat = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        managed = True
-        db_table = 'archivo'
-        verbose_name_plural = 'Archivo'
-
-    def __str__(self):
-        return self.nombre
-
-
-# MODELO PERFIL
-class Perfil(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE
-    )
-    foto_perfil = models.ForeignKey(
-        Archivo,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL
-    )
-    apellido_paterno = models.CharField(max_length=80, blank=True)
-    apellido_materno = models.CharField(max_length=80, blank=True)
-
-    def __str__(self):
-        return f'Perfil de {self.user.username}'
-
 
 # MODELO PUBLICACION
 class Publicacion(models.Model):
@@ -186,3 +201,4 @@ class Comentario(models.Model):
         managed = True
         db_table = 'comentario'
         verbose_name_plural = 'Comentarios'
+
