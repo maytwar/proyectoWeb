@@ -112,7 +112,6 @@
                             Inicio
                         </a>
 
-
                         <!-- CATEGORÍAS -->
                         <div class="nav-item dropdown">
 
@@ -126,10 +125,18 @@
                             </a>
 
                             <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                                
+
+                                <!-- Mostrar todas las noticias -->
+                                <a href="{% url 'home:categoria' %}"
+                                class="dropdown-item">
+
+                                    Todas las categorías
+
+                                </a>
+
                                 {% for categoria in categorias_menu %}
 
-                                    <a href="{% url 'home:categoria' %}?categoria={{ categoria.id }}"
+                                    <a href="{% url 'home:categoria_detalle' categoria.id %}"
                                     class="dropdown-item">
 
                                         {{ categoria.nombre }}

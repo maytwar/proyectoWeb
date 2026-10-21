@@ -24,7 +24,7 @@
 
                 <!-- Título -->
                 <h1 class="display-5 mb-3">
-                    Título de la noticia
+                    {{ publicacion.titulo }}
                 </h1>
 
                 <!-- Información -->
@@ -32,27 +32,31 @@
 
                     <span class="me-3">
                         <i class="fas fa-calendar-alt me-2"></i>
-                        Fecha
+                        {{ publicacion.createdat|date:"d/m/Y" }}
                     </span>
 
                     <span class="me-3">
                         <i class="fas fa-folder me-2"></i>
-                        Tecnología
+                        {{ publicacion.categoria.nombre|default:"Sin categoría" }}
                     </span>
 
                     <span>
                         <i class="fas fa-eye me-2"></i>
-                        Visitas: 4
+                        Visitas: {{ publicacion.visitas }}
                     </span>
 
                 </div>
 
 
                 <!-- Imagen principal -->
-                <img src="{% static 'img/news-1.jpg' %}"
-                     class="img-fluid rounded w-100 mb-4"
-                     style="height: 450px; object-fit: cover;"
-                     alt="Noticia">
+                {% if publicacion.imagen_portada %}
+
+                    <img src="{{ publicacion.imagen_portada.display_url }}"
+                        class="img-fluid rounded w-100 mb-4"
+                        style="height: 450px; object-fit: cover;"
+                        alt="{{ publicacion.titulo }}">
+
+                {% endif %}
 
 
                 <!-- Resumen -->
@@ -61,63 +65,46 @@
                 </h3>
 
                 <p class="fs-5 text-muted">
-                    Lorem Ipsum es simplemente el texto de relleno de las
-                    imprentas y archivos de texto. Lorem Ipsum ha sido el
-                    texto de relleno estándar de las industrias desde el año 1500.
+                    {{ publicacion.resumen }}
                 </p>
 
 
                 <!-- Contenido -->
-                <h3 class="mt-5 mb-3">
-                    Noticia
-                </h3>
-
-                <p>
-                    Al contrario del pensamiento popular, el texto de Lorem
-                    Ipsum no es simplemente texto aleatorio. Tiene sus raíces
-                    en una pieza clásica de la literatura del latín que data
-                    del año 45 antes de Cristo.
-                </p>
-
-                <p>
-                    Aquí se mostrará el contenido completo de la noticia
-                    publicada por CANACO. Posteriormente esta información
-                    podrá obtenerse directamente desde la base de datos.
-                </p>
+                <div class="contenido-noticia">
+                    {{ publicacion.contenido|safe }}
+                </div>
 
 
                 <!-- ========================= -->
                 <!-- GALERÍA -->
                 <!-- ========================= -->
 
-                <h3 class="mt-5 mb-4">
-                    Galería
-                </h3>
+                {% if publicacion.galeria.all %}
 
-                <div class="row g-3">
+                    <h3 class="mt-5 mb-4">
+                        Galería
+                    </h3>
 
-                    <div class="col-md-4">
-                        <img src="{% static 'img/news-1.jpg' %}"
-                             class="img-fluid rounded w-100"
-                             style="height: 200px; object-fit: cover;"
-                             alt="Galería">
+                    <div class="row g-3">
+
+                        {% for imagen in publicacion.galeria.all %}
+
+                            <div class="col-md-4">
+
+                                <img
+                                    src="{{ imagen.archivo.display_url }}"
+                                    class="img-fluid rounded w-100"
+                                    style="height: 200px; object-fit: cover;"
+                                    alt="Imagen de {{ publicacion.titulo }}"
+                                >
+
+                            </div>
+
+                        {% endfor %}
+
                     </div>
 
-                    <div class="col-md-4">
-                        <img src="{% static 'img/news-2.jpg' %}"
-                             class="img-fluid rounded w-100"
-                             style="height: 200px; object-fit: cover;"
-                             alt="Galería">
-                    </div>
-
-                    <div class="col-md-4">
-                        <img src="{% static 'img/news-3.jpg' %}"
-                             class="img-fluid rounded w-100"
-                             style="height: 200px; object-fit: cover;"
-                             alt="Galería">
-                    </div>
-
-                </div>
+                {% endif %}
 
 
                 <!-- ========================= -->
@@ -130,62 +117,119 @@
                         Comentarios
                     </h3>
 
-                    <!-- Comentario de ejemplo -->
-                    <div class="border-bottom pb-3 mb-4">
+                    <!-- Mensajes -->
+                    {% if messages %}
 
-                        <div class="d-flex align-items-center mb-2">
+                        {% for message in messages %}
 
-                            <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
+                            <div class="alert alert-{{ message.tags }}
+                                        alert-dismissible fade show"
+                                role="alert">
 
-                            <div>
-                                <strong>Usuario Alfredo</strong>
-                                <div class="text-muted small">
-                                    Fecha
-                                </div>
+                                {{ message }}
+
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert">
+                                </button>
+
                             </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+
+                    <!-- Comentarios aprobados -->
+
+                    {% for comentario in comentarios %}
+
+                        <div class="border-bottom pb-3 mb-4">
+
+                            <div class="d-flex align-items-center mb-2">
+
+                                <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
+
+                                <div>
+
+                                    <strong>
+                                        {{ comentario.user.username }}
+                                    </strong>
+
+                                    <div class="text-muted small">
+                                        {{ comentario.createdat|date:"d/m/Y H:i" }}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <p class="mb-0">
+                                {{ comentario.contenido }}
+                            </p>
 
                         </div>
 
-                        <p class="mb-0">
-                            Me gustó la noticia.
+                    {% empty %}
+
+                        <p class="text-muted">
+                            Todavía no hay comentarios aprobados.
+                            ¡Sé el primero en comentar!
                         </p>
 
-                    </div>
+                    {% endfor %}
 
 
                     <!-- Formulario -->
-                    <form method="POST">
 
-                        {% csrf_token %}
+                    {% if user.is_authenticated %}
 
-                        <div class="mb-3">
+                        <form method="POST">
 
-                            <label for="contenido"
-                                   class="form-label">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+
+                                <label for="contenido"
+                                    class="form-label">
+                                    Agregar comentario
+                                </label>
+
+                                <textarea
+                                    name="contenido"
+                                    id="contenido"
+                                    rows="4"
+                                    class="form-control"
+                                    placeholder="Escribe tu comentario..."
+                                    required></textarea>
+
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+
+                                <i class="fas fa-comment me-2"></i>
                                 Agregar comentario
-                            </label>
 
-                            <textarea name="contenido"
-                                      id="contenido"
-                                      rows="4"
-                                      class="form-control"
-                                      placeholder="Escribe tu comentario..."
-                                      required></textarea>
+                            </button>
+
+                        </form>
+
+                    {% else %}
+
+                        <div class="alert alert-info">
+
+                            Debes
+                            <a href="{% url 'home:login' %}">
+                                iniciar sesión
+                            </a>
+                            para agregar un comentario.
 
                         </div>
 
-                        <button type="submit"
-                                class="btn btn-primary">
-
-                            Agregar comentario
-
-                        </button>
-
-                    </form>
+                    {% endif %}
 
                 </div>
-
-            </div>
 
 
             <!-- ========================= -->

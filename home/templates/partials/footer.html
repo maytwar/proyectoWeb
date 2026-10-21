@@ -6,7 +6,10 @@
 
         <div class="row g-4">
 
-            <!-- Información -->
+            <!-- ========================= -->
+            <!-- INFORMACIÓN -->
+            <!-- ========================= -->
+
             <div class="col-lg-4 col-md-6">
                 <div class="footer-item-1">
 
@@ -43,7 +46,10 @@
             </div>
 
 
-            <!-- Enlaces -->
+            <!-- ========================= -->
+            <!-- ENLACES -->
+            <!-- ========================= -->
+
             <div class="col-lg-4 col-md-6">
 
                 <div class="footer-item-2">
@@ -54,20 +60,34 @@
                             Enlaces
                         </h4>
 
-                        <a href="#">
+                        <!-- Inicio -->
+                        <a href="{% url 'home:index' %}">
                             <i class="fas fa-angle-right text-secondary me-2"></i>
                             Inicio
                         </a>
 
-                        <a href="#">
+                        <!-- Categorías -->
+                        <a href="{% url 'home:categoria' %}">
                             <i class="fas fa-angle-right text-secondary me-2"></i>
                             Categorías
                         </a>
 
-                        <a href="#">
-                            <i class="fas fa-angle-right text-secondary me-2"></i>
-                            Perfil
-                        </a>
+                        <!-- Perfil -->
+                        {% if request.user.is_authenticated %}
+
+                            <a href="{% url 'home:perfil' %}">
+                                <i class="fas fa-angle-right text-secondary me-2"></i>
+                                Perfil
+                            </a>
+
+                        {% else %}
+
+                            <a href="{% url 'home:login' %}">
+                                <i class="fas fa-angle-right text-secondary me-2"></i>
+                                Iniciar sesión
+                            </a>
+
+                        {% endif %}
 
                     </div>
 
@@ -76,7 +96,10 @@
             </div>
 
 
-            <!-- Noticias recientes -->
+            <!-- ========================= -->
+            <!-- NOTICIAS RECIENTES -->
+            <!-- ========================= -->
+
             <div class="col-lg-4 col-md-6">
 
                 <div class="footer-item-3">
@@ -85,33 +108,91 @@
                         Noticias recientes
                     </h4>
 
-                    <div class="d-flex align-items-center">
+                    <!-- RECORRER NOTICIAS DE POSTGRESQL -->
 
-                        <div class="rounded-circle border border-2 border-primary overflow-hidden">
+                    {% for noticia in global_recientes %}
 
-                            <img src="{% static 'img/footer-1.jpg' %}"
-                                 class="img-zoomin img-fluid rounded-circle w-100"
-                                 alt="Noticia">
+                        <div class="d-flex align-items-center mb-4">
+
+                            <!-- Imagen de la noticia -->
+
+                            <div class="flex-shrink-0">
+
+                                <a href="{% url 'home:noticia_detalle' noticia.id %}">
+
+                                    {% if noticia.imagen_portada %}
+
+                                        <img
+                                            src="{{ noticia.imagen_portada.display_url }}"
+                                            class="img-fluid rounded"
+                                            style="width: 85px; height: 85px; object-fit: cover;"
+                                            alt="{{ noticia.titulo }}">
+
+                                    {% else %}
+
+                                        <div
+                                            class="bg-secondary rounded d-flex align-items-center justify-content-center"
+                                            style="width: 85px; height: 85px;">
+
+                                            <i class="fas fa-newspaper text-white fa-2x"></i>
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </a>
+
+                            </div>
+
+
+                            <!-- Información de la noticia -->
+
+                            <div class="d-flex flex-column ps-3">
+
+                                <!-- Categoría -->
+
+                                <small class="text-uppercase text-primary mb-1">
+
+                                    {{ noticia.categoria.nombre|default:"CANACO" }}
+
+                                </small>
+
+
+                                <!-- Título -->
+
+                                <a href="{% url 'home:noticia_detalle' noticia.id %}"
+                                   class="h6 text-white mb-2">
+
+                                    {{ noticia.titulo|truncatewords:10 }}
+
+                                </a>
+
+
+                                <!-- Fecha -->
+
+                                <small class="text-secondary">
+
+                                    <i class="fas fa-calendar-alt me-2"></i>
+
+                                    {{ noticia.createdat|date:"d/m/Y" }}
+
+                                </small>
+
+                            </div>
 
                         </div>
 
-                        <div class="d-flex flex-column ps-4">
+                    {% empty %}
 
-                            <p class="text-uppercase text-white mb-1">
-                                CANACO
-                            </p>
+                        <!-- MENSAJE SI NO EXISTEN NOTICIAS -->
 
-                            <a href="#" class="h6 text-white">
-                                Consulta nuestras noticias más recientes
-                            </a>
+                        <p class="text-secondary">
 
-                            <small class="text-body d-block">
-                                Información y novedades
-                            </small>
+                            No hay noticias recientes disponibles.
 
-                        </div>
+                        </p>
 
-                    </div>
+                    {% endfor %}
 
                 </div>
 
@@ -124,7 +205,10 @@
 <!-- Footer End -->
 
 
-<!-- Copyright Start -->
+<!-- ========================= -->
+<!-- COPYRIGHT -->
+<!-- ========================= -->
+
 <div class="container-fluid copyright bg-dark py-4">
     <div class="container">
 

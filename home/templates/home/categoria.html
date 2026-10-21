@@ -1,7 +1,7 @@
 {% extends 'partials/base.html' %}
 {% load static %}
 
-{% block title %}Categoría | CANACO Noticias{% endblock %}
+{% block title %}Categorías | CANACO Noticias{% endblock %}
 
 {% block content %}
 
@@ -19,7 +19,17 @@
             </span>
 
             <h1 class="display-5 fw-bold">
-                Tecnología
+
+                {% if categoria_actual %}
+
+                    {{ categoria_actual.nombre }}
+
+                {% else %}
+
+                    Todas las noticias
+
+                {% endif %}
+
             </h1>
 
             <p class="text-muted">
@@ -33,6 +43,58 @@
 
 
 <!-- ========================= -->
+<!-- FILTRO DE CATEGORÍAS -->
+<!-- ========================= -->
+
+<div class="container-fluid pt-5">
+
+    <div class="container">
+
+        <div class="row justify-content-end">
+
+            <div class="col-lg-4 col-md-6">
+
+                <label class="form-label fw-bold">
+                    Filtrar por categoría
+                </label>
+
+                <select
+                    class="form-select"
+                    onchange="if(this.value) window.location.href=this.value;">
+
+                    <option value="{% url 'home:categoria' %}"
+                        {% if not categoria_actual %}selected{% endif %}>
+
+                        Todas las categorías
+
+                    </option>
+
+                    {% for categoria in categorias %}
+
+                        <option
+                            value="{% url 'home:categoria_detalle' categoria.id %}"
+                            {% if categoria_actual and categoria_actual.id == categoria.id %}
+                                selected
+                            {% endif %}>
+
+                            {{ categoria.nombre }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================= -->
 <!-- NOTICIAS DE LA CATEGORÍA -->
 <!-- ========================= -->
 
@@ -42,219 +104,130 @@
 
         <div class="row g-4">
 
+            {% for noticia in publicaciones %}
 
-            <!-- NOTICIA 1 -->
-            <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6">
 
-                <div class="bg-white rounded overflow-hidden shadow-sm h-100">
+                    <div class="bg-white rounded overflow-hidden shadow-sm h-100">
 
-                    <div class="overflow-hidden">
+                        <!-- IMAGEN -->
 
-                        <img src="{% static 'img/news-1.jpg' %}"
-                             class="img-fluid w-100 img-zoomin"
-                             style="height: 230px; object-fit: cover;"
-                             alt="Noticia">
+                        <div class="overflow-hidden">
 
-                    </div>
+                            {% if noticia.imagen_portada %}
 
-                    <div class="p-4">
+                                <img
+                                    src="{{ noticia.imagen_portada.display_url }}"
+                                    class="img-fluid w-100 img-zoomin"
+                                    style="height: 230px; object-fit: cover;"
+                                    alt="{{ noticia.titulo }}">
 
-                        <span class="badge bg-primary mb-3">
-                            Tecnología
-                        </span>
+                            {% else %}
 
-                        <h4>
-                            Título de la noticia
-                        </h4>
+                                <div
+                                    class="bg-light d-flex align-items-center justify-content-center"
+                                    style="height: 230px;">
 
-                        <div class="text-muted mb-3">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
 
-                            <i class="fas fa-calendar-alt me-2"></i>
+                                </div>
 
-                            Fecha de la noticia
+                            {% endif %}
 
                         </div>
 
-                        <p>
-                            Resumen de la noticia. Aquí aparecerá
-                            una breve descripción de la publicación.
-                        </p>
 
-                        <a href="{% url 'home:noticia' %}"
-                           class="btn btn-primary">
+                        <!-- INFORMACIÓN -->
 
-                            Saber más
+                        <div class="p-4">
 
-                            <i class="fas fa-arrow-right ms-2"></i>
+                            <!-- Categoría -->
 
-                        </a>
+                            <span class="badge bg-primary mb-3">
+
+                                {{ noticia.categoria.nombre|default:"Sin categoría" }}
+
+                            </span>
+
+
+                            <!-- Título -->
+
+                            <h4>
+
+                                {{ noticia.titulo }}
+
+                            </h4>
+
+
+                            <!-- Fecha -->
+
+                            <div class="text-muted mb-3">
+
+                                <i class="fas fa-calendar-alt me-2"></i>
+
+                                {{ noticia.createdat|date:"d/m/Y" }}
+
+                            </div>
+
+
+                            <!-- Resumen -->
+
+                            <p>
+
+                                {{ noticia.resumen|truncatewords:25 }}
+
+                            </p>
+
+
+                            <!-- Botón -->
+
+                            <a href="{% url 'home:noticia_detalle' noticia.id %}"
+                               class="btn btn-primary">
+
+                                Saber más
+
+                                <i class="fas fa-arrow-right ms-2"></i>
+
+                            </a>
+
+                        </div>
 
                     </div>
 
                 </div>
 
-            </div>
+            {% empty %}
 
+                <!-- SIN NOTICIAS -->
 
-            <!-- NOTICIA 2 -->
-            <div class="col-lg-4 col-md-6">
+                <div class="col-12 text-center py-5">
 
-                <div class="bg-white rounded overflow-hidden shadow-sm h-100">
+                    <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
 
-                    <div class="overflow-hidden">
+                    <h4 class="text-muted">
 
-                        <img src="{% static 'img/news-2.jpg' %}"
-                             class="img-fluid w-100 img-zoomin"
-                             style="height: 230px; object-fit: cover;"
-                             alt="Noticia">
+                        No hay noticias publicadas en esta categoría.
 
-                    </div>
+                    </h4>
 
-                    <div class="p-4">
+                    <p class="text-muted">
 
-                        <span class="badge bg-primary mb-3">
-                            Tecnología
-                        </span>
+                        Puedes consultar otras categorías disponibles.
 
-                        <h4>
-                            Segunda noticia
-                        </h4>
+                    </p>
 
-                        <div class="text-muted mb-3">
+                    <a href="{% url 'home:categoria' %}"
+                       class="btn btn-primary">
 
-                            <i class="fas fa-calendar-alt me-2"></i>
+                        Ver todas las noticias
 
-                            Fecha de la noticia
-
-                        </div>
-
-                        <p>
-                            Resumen de la noticia. Aquí aparecerá
-                            una breve descripción de la publicación.
-                        </p>
-
-                        <a href="{% url 'home:noticia' %}"
-                           class="btn btn-primary">
-
-                            Saber más
-
-                            <i class="fas fa-arrow-right ms-2"></i>
-
-                        </a>
-
-                    </div>
+                    </a>
 
                 </div>
 
-            </div>
-
-
-            <!-- NOTICIA 3 -->
-            <div class="col-lg-4 col-md-6">
-
-                <div class="bg-white rounded overflow-hidden shadow-sm h-100">
-
-                    <div class="overflow-hidden">
-
-                        <img src="{% static 'img/news-3.jpg' %}"
-                             class="img-fluid w-100 img-zoomin"
-                             style="height: 230px; object-fit: cover;"
-                             alt="Noticia">
-
-                    </div>
-
-                    <div class="p-4">
-
-                        <span class="badge bg-primary mb-3">
-                            Tecnología
-                        </span>
-
-                        <h4>
-                            Tercera noticia
-                        </h4>
-
-                        <div class="text-muted mb-3">
-
-                            <i class="fas fa-calendar-alt me-2"></i>
-
-                            Fecha de la noticia
-
-                        </div>
-
-                        <p>
-                            Resumen de la noticia. Aquí aparecerá
-                            una breve descripción de la publicación.
-                        </p>
-
-                        <a href="{% url 'home:noticia' %}"
-                           class="btn btn-primary">
-
-                            Saber más
-
-                            <i class="fas fa-arrow-right ms-2"></i>
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
+            {% endfor %}
 
         </div>
-
-
-        <!-- ========================= -->
-        <!-- PAGINACIÓN -->
-        <!-- ========================= -->
-
-        <nav class="mt-5">
-
-            <ul class="pagination justify-content-center">
-
-                <li class="page-item disabled">
-
-                    <a class="page-link" href="#">
-                        Anterior
-                    </a>
-
-                </li>
-
-                <li class="page-item active">
-
-                    <a class="page-link" href="#">
-                        1
-                    </a>
-
-                </li>
-
-                <li class="page-item">
-
-                    <a class="page-link" href="#">
-                        2
-                    </a>
-
-                </li>
-
-                <li class="page-item">
-
-                    <a class="page-link" href="#">
-                        3
-                    </a>
-
-                </li>
-
-                <li class="page-item">
-
-                    <a class="page-link" href="#">
-                        Siguiente
-                    </a>
-
-                </li>
-
-            </ul>
-
-        </nav>
 
     </div>
 

@@ -16,6 +16,8 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import user_passes_test
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image, UnidentifiedImageError
+from django.views.decorators.http import require_POST
+from .models import Comentario
 from django.shortcuts import get_object_or_404
 
 import os
@@ -38,7 +40,29 @@ def es_administrador(user):
 
 # Create your views here.
 def index(request):
-    return render(request, 'home/index.html')
+
+    # Obtener únicamente las noticias publicadas
+    publicaciones = Publicacion.objects.filter(
+        estado=Publicacion.ESTADO_PUBLICADO
+    ).select_related(
+        'categoria',
+        'imagen_portada'
+    ).order_by('-createdat')
+
+    # Últimas 3 noticias para el carrusel
+    noticias_destacadas = publicaciones[:3]
+
+    # Últimas 6 noticias para las tarjetas
+    noticias_recientes = publicaciones[:6]
+
+    return render(
+        request,
+        'home/index.html',
+        {
+            'noticias_destacadas': noticias_destacadas,
+            'noticias_recientes': noticias_recientes
+        }
+    )
 
 def contactanos(request):
     return render(request, 'home/contactanos.html')
@@ -46,23 +70,113 @@ def contactanos(request):
 def base(request):
     return render(request, 'home/base.html')
 
-def categoria(request):
+def categoria(request, pk=None):
 
     categorias = Categoria.objects.all().order_by('nombre')
+
+    categoria_actual = get_object_or_404(
+        Categoria,
+        pk=pk
+    ) if pk else None
+
+    publicaciones = Publicacion.objects.filter(
+        estado=Publicacion.ESTADO_PUBLICADO
+    ).select_related(
+        'categoria',
+        'autor',
+        'imagen_portada'
+    )
+
+    if categoria_actual:
+        publicaciones = publicaciones.filter(
+            categoria=categoria_actual
+        )
 
     return render(
         request,
         'home/categoria.html',
         {
-            'categorias': categorias
+            'categorias': categorias,
+            'categoria_actual': categoria_actual,
+            'publicaciones': publicaciones.order_by('-createdat')
         }
     )
 
-#def login(request):
- #   return render(request, 'home/login.html')
+def noticia(request, pk=None):
 
-def noticia(request):
-    return render(request, 'home/noticia.html')
+    # Si no se proporciona una noticia, buscar una publicada
+    if pk is None:
+
+        publicacion = Publicacion.objects.filter(
+            estado=Publicacion.ESTADO_PUBLICADO
+        ).order_by('-createdat').first()
+
+        if publicacion is None:
+            messages.info(
+                request,
+                'Todavía no hay noticias publicadas.'
+            )
+            return redirect('home:index')
+
+        return redirect('home:noticia_detalle', pk=publicacion.pk)
+
+    # Buscar la noticia correspondiente
+    publicacion = get_object_or_404(
+        Publicacion,
+        pk=pk,
+        estado=Publicacion.ESTADO_PUBLICADO
+    )
+
+    # Registrar comentario
+    if request.method == 'POST':
+
+        if not request.user.is_authenticated:
+            messages.error(
+                request,
+                'Debes iniciar sesión para comentar.'
+            )
+            return redirect('home:login')
+
+        contenido = request.POST.get('contenido', '').strip()
+
+        if contenido:
+
+            Comentario.objects.create(
+                publicacion=publicacion,
+                user=request.user,
+                contenido=contenido,
+                estado=Comentario.ESTADO_PENDIENTE
+            )
+
+            messages.success(
+                request,
+                'Tu comentario fue enviado y está pendiente de aprobación.'
+            )
+
+            return redirect(
+                'home:noticia_detalle',
+                pk=publicacion.pk
+            )
+
+        messages.error(
+            request,
+            'El comentario no puede estar vacío.'
+        )
+
+    # Consultar comentarios aprobados
+    comentarios = Comentario.objects.filter(
+        publicacion=publicacion,
+        estado=Comentario.ESTADO_APROBADO
+    ).select_related('user').order_by('-createdat')
+
+    return render(
+        request,
+        'home/noticia.html',
+        {
+            'publicacion': publicacion,
+            'comentarios': comentarios
+        }
+    )
 
 @login_required
 def perfil(request):
@@ -886,15 +1000,333 @@ def eliminar_usuario(request, usuario_id):
 
 @staff_member_required
 def crud_categorias(request):
-    return render(request, 'home/crud_categorias.html')
+
+    if request.method == 'POST':
+
+        nombre = request.POST.get('nombre', '').strip()
+
+        if nombre:
+            Categoria.objects.create(
+                nombre=nombre,
+                fk_user=request.user
+            )
+
+            messages.success(
+                request,
+                'Categoría agregada correctamente.'
+            )
+
+            return redirect('home:crudCategorias')
+
+        messages.error(
+            request,
+            'Debes ingresar el nombre de la categoría.'
+        )
+
+    categorias = Categoria.objects.all().order_by('-createdat')
+
+    return render(
+        request,
+        'home/crud_categorias.html',
+        {'categorias': categorias}
+    )
 
 @staff_member_required
 def crud_comentarios(request):
-    return render(request, 'home/crud_comentarios.html')
+
+    comentarios = Comentario.objects.select_related(
+        'publicacion',
+        'user'
+    ).order_by('-createdat')
+
+    return render(
+        request,
+        'home/crud_comentarios.html',
+        {'comentarios': comentarios}
+    )
+
+@staff_member_required
+@require_POST
+def aprobar_comentario(request, pk):
+
+    comentario = get_object_or_404(Comentario, pk=pk)
+
+    comentario.estado = Comentario.ESTADO_APROBADO
+    comentario.save()
+
+    messages.success(
+        request,
+        'Comentario aprobado correctamente.'
+    )
+
+    return redirect('home:crudComentarios')
+
+@staff_member_required
+@require_POST
+def bloquear_comentario(request, pk):
+
+    comentario = get_object_or_404(Comentario, pk=pk)
+
+    comentario.estado = Comentario.ESTADO_BLOQUEADO
+    comentario.save()
+
+    messages.success(
+        request,
+        'Comentario bloqueado correctamente.'
+    )
+
+    return redirect('home:crudComentarios')
+
+@staff_member_required
+@require_POST
+def eliminar_comentario(request, pk):
+
+    comentario = get_object_or_404(Comentario, pk=pk)
+
+    comentario.delete()
+
+    messages.success(
+        request,
+        'Comentario eliminado correctamente.'
+    )
+
+    return redirect('home:crudComentarios')
 
 @staff_member_required
 def crud_noticias(request):
-    return render(request, 'home/crud_noticias.html')
+
+    publicaciones = Publicacion.objects.select_related(
+        'categoria',
+        'autor'
+    ).order_by('-createdat')
+
+    return render(
+        request,
+        'home/crud_noticias.html',
+        {
+            'publicaciones': publicaciones
+        }
+    )
+
+@staff_member_required
+def editar_publicacion(request, pk):
+
+    publicacion = get_object_or_404(Publicacion, pk=pk)
+
+    categorias = Categoria.objects.all().order_by('nombre')
+
+    if request.method == 'POST':
+
+        # Obtener información del formulario
+        titulo = request.POST.get('titulo', '').strip()
+        resumen = request.POST.get('resumen', '').strip()
+        contenido_original = request.POST.get('contenido', '')
+        categoria_id = request.POST.get('categoria', '')
+        estado = request.POST.get('estado', 'borrador')
+
+        # Obtener nuevas imágenes
+        imagen_portada = request.FILES.get('imagen_portada')
+        imagenes_galeria = request.FILES.getlist('galeria')
+
+        # Limpiar contenido HTML
+        contenido = nh3.clean(
+            contenido_original,
+            tags={
+                'p', 'br', 'strong', 'em', 'u', 's',
+                'h1', 'h2', 'h3',
+                'ol', 'ul', 'li',
+                'a', 'blockquote', 'span'
+            },
+            attributes={
+                'a': {'href', 'title'},
+                'span': {'class'},
+                'p': {'class'},
+            }
+        )
+
+        # Validar campos obligatorios
+        if not titulo or not resumen or not strip_tags(contenido).strip():
+
+            messages.error(
+                request,
+                'Debes completar el título, resumen y contenido.'
+            )
+
+            return render(
+                request,
+                'home/crear_publicacion.html',
+                {
+                    'publicacion': publicacion,
+                    'categorias': categorias
+                }
+            )
+
+        # Validar estado
+        if estado not in [
+            Publicacion.ESTADO_BORRADOR,
+            Publicacion.ESTADO_PUBLICADO
+        ]:
+            estado = Publicacion.ESTADO_BORRADOR
+
+        # Buscar categoría
+        categoria = None
+
+        if categoria_id:
+
+            try:
+                categoria = Categoria.objects.get(pk=categoria_id)
+
+            except (Categoria.DoesNotExist, ValueError, TypeError):
+
+                messages.error(
+                    request,
+                    'La categoría seleccionada no es válida.'
+                )
+
+                return render(
+                    request,
+                    'home/crear_publicacion.html',
+                    {
+                        'publicacion': publicacion,
+                        'categorias': categorias
+                    }
+                )
+
+        # Validar imágenes nuevas
+        try:
+
+            if imagen_portada:
+                validar_imagen(imagen_portada)
+
+            for imagen in imagenes_galeria:
+                validar_imagen(imagen)
+
+        except ValidationError as error:
+
+            messages.error(
+                request,
+                ' '.join(error.messages)
+            )
+
+            return render(
+                request,
+                'home/crear_publicacion.html',
+                {
+                    'publicacion': publicacion,
+                    'categorias': categorias
+                }
+            )
+
+        # Actualizar publicación
+        try:
+
+            with transaction.atomic():
+
+                publicacion.titulo = titulo
+                publicacion.resumen = resumen
+                publicacion.contenido = contenido
+                publicacion.categoria = categoria
+                publicacion.estado = estado
+
+                # Reemplazar portada solo si se sube otra
+                if imagen_portada:
+
+                    archivo_portada = guardar_archivo(
+                        imagen_portada,
+                        request.user
+                    )
+
+                    publicacion.imagen_portada = archivo_portada
+
+                publicacion.save()
+
+                # Agregar nuevas imágenes a la galería
+                for imagen in imagenes_galeria:
+
+                    archivo = guardar_archivo(
+                        imagen,
+                        request.user
+                    )
+
+                    GaleriaPublicacion.objects.create(
+                        publicacion=publicacion,
+                        archivo=archivo
+                    )
+
+        except Exception:
+
+            messages.error(
+                request,
+                'Ocurrió un error al actualizar la publicación.'
+            )
+
+            return render(
+                request,
+                'home/crear_publicacion.html',
+                {
+                    'publicacion': publicacion,
+                    'categorias': categorias
+                }
+            )
+
+        messages.success(
+            request,
+            'Publicación actualizada correctamente.'
+        )
+
+        return redirect('home:crudNoticias')
+
+    return render(
+        request,
+        'home/crear_publicacion.html',
+        {
+            'publicacion': publicacion,
+            'categorias': categorias
+        }
+    )
+
+@staff_member_required
+@require_POST
+def publicar_publicacion(request, pk):
+
+    publicacion = get_object_or_404(Publicacion, pk=pk)
+
+    if publicacion.estado == Publicacion.ESTADO_BORRADOR:
+
+        publicacion.estado = Publicacion.ESTADO_PUBLICADO
+
+        messages.success(
+            request,
+            'La noticia se publicó correctamente.'
+        )
+
+    else:
+
+        publicacion.estado = Publicacion.ESTADO_BORRADOR
+
+        messages.success(
+            request,
+            'La noticia se cambió a borrador.'
+        )
+
+    publicacion.save()
+
+    return redirect('home:crudNoticias')
+
+@staff_member_required
+@require_POST
+def eliminar_publicacion(request, pk):
+
+    publicacion = get_object_or_404(Publicacion, pk=pk)
+
+    publicacion.delete()
+
+    messages.success(
+        request,
+        'La publicación fue eliminada correctamente.'
+    )
+
+    return redirect('home:crudNoticias')
 
 @login_required
 def crud_perfil(request):
@@ -1109,5 +1541,49 @@ def crud_usuarios(request):
     )
 
 @staff_member_required
-def editar_categoria(request):
-    return render(request, 'home/editar_categoria.html')
+def editar_categoria(request, pk):
+
+    categoria = get_object_or_404(Categoria, pk=pk)
+
+    if request.method == 'POST':
+
+        nombre = request.POST.get('nombre', '').strip()
+
+        if nombre:
+
+            categoria.nombre = nombre
+            categoria.save()
+
+            messages.success(
+                request,
+                'Categoría actualizada correctamente.'
+            )
+
+            return redirect('home:crudCategorias')
+
+        messages.error(
+            request,
+            'El nombre de la categoría no puede estar vacío.'
+        )
+
+    return render(
+        request,
+        'home/editar_categoria.html',
+        {'categoria': categoria}
+    )
+
+@staff_member_required
+def eliminar_categoria(request, pk):
+
+    categoria = get_object_or_404(Categoria, pk=pk)
+
+    if request.method == 'POST':
+
+        categoria.delete()
+
+        messages.success(
+            request,
+            'Categoría eliminada correctamente.'
+        )
+
+    return redirect('home:crudCategorias')

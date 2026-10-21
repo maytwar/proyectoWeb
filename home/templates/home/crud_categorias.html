@@ -122,15 +122,32 @@
 
                         <div class="d-flex gap-1">
 
-                            <button type="button"
-                                    class="btn btn-info btn-sm">
-                                Editar
-                            </button>
+                            <!-- EDITAR CATEGORÍA -->
+                            <a href="{% url 'home:editarCategoria' categoria.id %}"
+                            class="btn btn-info btn-sm">
 
-                            <button type="button"
-                                    class="btn btn-danger btn-sm">
-                                Eliminar
-                            </button>
+                                <i class="fas fa-edit me-1"></i>
+                                Editar
+
+                            </a>
+
+
+                            <!-- ELIMINAR CATEGORÍA -->
+                            <form method="POST"
+                                action="{% url 'home:eliminarCategoria' categoria.id %}"
+                                onsubmit="return confirm('¿Estás segura de que deseas eliminar esta categoría?');">
+
+                                {% csrf_token %}
+
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm">
+
+                                    <i class="fas fa-trash-alt me-1"></i>
+                                    Eliminar
+
+                                </button>
+
+                            </form>
 
                         </div>
 

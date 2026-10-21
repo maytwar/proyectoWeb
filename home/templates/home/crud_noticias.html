@@ -85,7 +85,7 @@
                     </td>
 
                     <td>
-                        {% if noticia.publicada %}
+                        {% if noticia.estado == 'publicado' %}
                             <span class="badge bg-success">
                                 Publicado
                             </span>
@@ -97,23 +97,99 @@
                     </td>
 
                     <td>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-warning btn-sm">
-                                Ver
-                            </button>
 
-                            <button class="btn btn-info btn-sm">
+                        <div class="d-flex gap-1 flex-wrap">
+
+                            <!-- VER NOTICIA -->
+
+                            {% if noticia.estado == 'publicado' %}
+
+                                <a href="{% url 'home:noticia_detalle' noticia.id %}"
+                                class="btn btn-warning btn-sm">
+
+                                    <i class="fas fa-eye me-1"></i>
+                                    Ver
+
+                                </a>
+
+                            {% else %}
+
+                                <button type="button"
+                                        class="btn btn-warning btn-sm"
+                                        disabled
+                                        title="La noticia todavía es un borrador">
+
+                                    <i class="fas fa-eye me-1"></i>
+                                    Ver
+
+                                </button>
+
+                            {% endif %}
+
+
+                            <!-- EDITAR NOTICIA -->
+
+                            <a href="{% url 'home:editarPublicacion' noticia.id %}"
+                            class="btn btn-info btn-sm">
+
+                                <i class="fas fa-edit me-1"></i>
                                 Editar
-                            </button>
 
-                            <button class="btn btn-success btn-sm">
-                                Publicar
-                            </button>
+                            </a>
 
-                            <button class="btn btn-danger btn-sm">
-                                Eliminar
-                            </button>
+
+                            <!-- PUBLICAR / CAMBIAR A BORRADOR -->
+
+                            <form method="POST"
+                                action="{% url 'home:publicarPublicacion' noticia.id %}">
+
+                                {% csrf_token %}
+
+                                {% if noticia.estado == 'borrador' %}
+
+                                    <button type="submit"
+                                            class="btn btn-success btn-sm">
+
+                                        <i class="fas fa-check me-1"></i>
+                                        Publicar
+
+                                    </button>
+
+                                {% else %}
+
+                                    <button type="submit"
+                                            class="btn btn-secondary btn-sm">
+
+                                        <i class="fas fa-file-alt me-1"></i>
+                                        Borrador
+
+                                    </button>
+
+                                {% endif %}
+
+                            </form>
+
+
+                            <!-- ELIMINAR NOTICIA -->
+
+                            <form method="POST"
+                                action="{% url 'home:eliminarPublicacion' noticia.id %}"
+                                onsubmit="return confirm('¿Estás segura de que deseas eliminar esta publicación? Esta acción no se puede deshacer.');">
+
+                                {% csrf_token %}
+
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm">
+
+                                    <i class="fas fa-trash-alt me-1"></i>
+                                    Eliminar
+
+                                </button>
+
+                            </form>
+
                         </div>
+
                     </td>
 
                 </tr>
