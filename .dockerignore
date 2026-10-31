@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# Variables privadas
+.env
+.env.*
+
+# Entornos virtuales
+canaco_env/
+venv/
+.venv/
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Archivos del sistema
+.DS_Store
+
+# Base de datos local y respaldos
+db.sqlite3
+*.dump
+*.sql
+
+# Archivos generados
+staticfiles/
+
+# Imágenes subidas por usuarios
+media/
