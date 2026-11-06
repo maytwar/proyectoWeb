@@ -19,6 +19,8 @@ from PIL import Image, UnidentifiedImageError
 from django.views.decorators.http import require_POST
 from .models import Comentario
 from django.shortcuts import get_object_or_404
+from .models import VistaPublicacion
+from django.db.models import F
 
 import os
 import uuid
@@ -127,6 +129,20 @@ def noticia(request, pk=None):
         estado=Publicacion.ESTADO_PUBLICADO
     )
 
+    # Registrar una vista única por usuario
+    if request.method == 'GET' and request.user.is_authenticated:
+
+        vista, creada = VistaPublicacion.objects.get_or_create(
+            publicacion=publicacion,
+            usuario=request.user
+        )
+
+        if creada:
+            Publicacion.objects.filter(pk=publicacion.pk).update(
+                visitas=F('visitas') + 1
+            )
+            publicacion.refresh_from_db(fields=['visitas'])
+
     # Registrar comentario
     if request.method == 'POST':
 
@@ -157,6 +173,9 @@ def noticia(request, pk=None):
                 'home:noticia_detalle',
                 pk=publicacion.pk
             )
+
+
+
 
         messages.error(
             request,
@@ -1587,3 +1606,6 @@ def eliminar_categoria(request, pk):
         )
 
     return redirect('home:crudCategorias')
+
+def aviso_privacidad(request):
+    return render(request, 'home/aviso_privacidad.html')

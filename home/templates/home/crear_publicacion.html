@@ -331,8 +331,14 @@
     formulario.addEventListener('submit', function(event) {
         const contenido = document.getElementById('contenido');
 
-        // Guardamos el contenido con su formato HTML.
-        contenido.value = quill.getSemanticHTML();
+        // Obtenemos el contenido HTML del editor.
+        let html = quill.getSemanticHTML();
+
+        // Convertimos los espacios especiales en espacios normales.
+        html = html.replace(/&nbsp;|\u00A0/g, ' ');
+
+        // Guardamos el contenido corregido.
+        contenido.value = html;
 
         // Evitamos enviar noticias sin contenido.P
         if (quill.getText().trim().length === 0) {

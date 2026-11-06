@@ -43,6 +43,15 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# Seguridad HTTPS en producción
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://canaco.app',
+]
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 # Application definition
 

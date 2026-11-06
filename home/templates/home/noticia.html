@@ -73,8 +73,6 @@
                 <div class="contenido-noticia">
                     {{ publicacion.contenido|safe }}
                 </div>
-
-
                 <!-- ========================= -->
                 <!-- GALERÍA -->
                 <!-- ========================= -->
@@ -224,13 +222,12 @@
                                 iniciar sesión
                             </a>
                             para agregar un comentario.
-
                         </div>
 
                     {% endif %}
 
                 </div>
-
+            </div>
 
             <!-- ========================= -->
             <!-- COLUMNA DERECHA -->
@@ -239,61 +236,6 @@
             <div class="col-lg-4">
 
                 <!-- OTRAS NOTICIAS -->
-
-                <div class="bg-light rounded p-4 mb-4">
-
-                    <h4 class="mb-4">
-                        Otras noticias
-                    </h4>
-
-
-                    <!-- Noticia lateral 1 -->
-                    <div class="d-flex mb-4">
-
-                        <img src="{% static 'img/news-2.jpg' %}"
-                             class="rounded me-3"
-                             style="width: 90px; height: 90px; object-fit: cover;"
-                             alt="Noticia">
-
-                        <div>
-
-                            <span class="text-muted small">
-                                Tecnología
-                            </span>
-
-                            <h6 class="mt-1">
-                                Otra noticia de CANACO
-                            </h6>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- Noticia lateral 2 -->
-                    <div class="d-flex">
-
-                        <img src="{% static 'img/news-3.jpg' %}"
-                             class="rounded me-3"
-                             style="width: 90px; height: 90px; object-fit: cover;"
-                             alt="Noticia">
-
-                        <div>
-
-                            <span class="text-muted small">
-                                Eventos
-                            </span>
-
-                            <h6 class="mt-1">
-                                Información reciente
-                            </h6>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
 
                 <!-- CATEGORÍAS -->
 
@@ -339,5 +281,69 @@
 
     </div>
 </div>
+
+<style>
+/* Evita que las columnas se desborden */
+.row > [class*="col-"] {
+    min-width: 0;
+}
+
+/* Contenido de las noticias */
+.contenido-noticia {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+    line-height: 1.8;
+    font-size: 16px;
+}
+
+/* Párrafos y títulos */
+.contenido-noticia p,
+.contenido-noticia h1,
+.contenido-noticia h2,
+.contenido-noticia h3,
+.contenido-noticia h4 {
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
+/* Imágenes dentro de las noticias */
+.contenido-noticia img,
+.contenido-noticia video,
+.contenido-noticia iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Tablas anchas */
+.contenido-noticia table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Ajustes para celulares */
+@media (max-width: 767px) {
+    .contenido-noticia {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .contenido-noticia h1 {
+        font-size: 26px;
+    }
+
+    .contenido-noticia h2 {
+        font-size: 23px;
+    }
+
+    .contenido-noticia h3 {
+        font-size: 20px;
+    }
+}
+</style>
 
 {% endblock content %}

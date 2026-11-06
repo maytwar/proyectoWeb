@@ -162,6 +162,36 @@ class GaleriaPublicacion(models.Model):
         db_table = 'galeria_publicacion'
         verbose_name_plural = 'Galeria de publicaciones'
 
+# MODELO PARA REGISTRAR VISTAS ÚNICAS
+class VistaPublicacion(models.Model):
+    publicacion = models.ForeignKey(
+        Publicacion,
+        on_delete=models.CASCADE,
+        related_name='registros_vistas'
+    )
+
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='noticias_vistas'
+    )
+
+    fecha_vista = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'vista_publicacion'
+        verbose_name = 'Vista de publicación'
+        verbose_name_plural = 'Vistas de publicaciones'
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['publicacion', 'usuario'],
+                name='vista_unica_por_usuario'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.usuario.username} - {self.publicacion.titulo}'
 
 # MODELO COMENTARIO
 class Comentario(models.Model):

@@ -34,10 +34,7 @@ urlpatterns = [
     path('crudCategorias/', views.crud_categorias, name='crudCategorias'),
     path('editarCategoria/<int:pk>/', views.editar_categoria, name='editarCategoria'),
     path('eliminarCategoria/<int:pk>/', views.eliminar_categoria, name='eliminarCategoria'),
-        
-
-
-
+    path('aviso-de-privacidad/', views.aviso_privacidad, name='aviso_privacidad'),
 ]
 
 

@@ -6,6 +6,22 @@
 <head>
     <meta charset="utf-8">
 
+    <!-- Google Analytics 4: consentimiento inicial -->
+      <script>
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+            dataLayer.push(arguments);
+      }
+
+      gtag('consent', 'default', {
+            analytics_storage: 'denied',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied'
+      });
+      </script>
+
     <title>{% block title %}CANACO Noticias{% endblock %}</title>
 
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
@@ -43,6 +59,37 @@
 
 <body>
 
+      <!-- Aviso de consentimiento de cookies -->
+      <div id="aviso-cookies"
+      class="position-fixed bottom-0 start-0 w-100 bg-white border-top shadow p-3"
+      style="z-index: 9999; display: none;">
+
+      <div class="container d-flex flex-column flex-md-row
+                  align-items-center justify-content-between gap-3">
+
+            <p class="mb-0">
+                  Utilizamos cookies de análisis para conocer cómo se utiliza
+                  CANACO Noticias y mejorar nuestro sitio.
+                  Puedes aceptarlas o rechazarlas.
+            </p>
+
+            <div class="d-flex gap-2">
+                  <button type="button"
+                        id="rechazar-cookies"
+                        class="btn btn-outline-secondary">
+                  Rechazar
+                  </button>
+
+                  <button type="button"
+                        id="aceptar-cookies"
+                        class="btn btn-primary">
+                  Aceptar
+                  </button>
+            </div>
+
+      </div>
+      </div>
+
     <!-- Spinner -->
     <div id="spinner"
          class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50 d-flex align-items-center justify-content-center">
@@ -60,6 +107,13 @@
     <!-- Pie de página -->
     {% include 'partials/footer.html' %}
 
+    <div class="text-center py-2">
+      <button type="button"
+                  id="configurar-cookies"
+                  class="btn btn-link btn-sm text-secondary">
+            Configurar cookies
+      </button>
+     </div>
 
     <!-- JavaScript Libraries -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
@@ -76,6 +130,83 @@
     <script src="{% static 'js/main.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
+
+
+<!-- Consentimiento y carga de Google Analytics -->
+<script>
+    const GA_ID = 'G-QVCJNGXBZY';
+    const COOKIE_KEY = 'canaco_consentimiento_analytics';
+
+    function activarAnalytics() {
+        if (window.analyticsCargado) return;
+        window.analyticsCargado = true;
+
+        gtag('consent', 'update', {
+            analytics_storage: 'granted'
+        });
+
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+        document.head.appendChild(script);
+
+        gtag('js', new Date());
+        gtag('config', GA_ID);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const aviso = document.getElementById('aviso-cookies');
+        const aceptar = document.getElementById('aceptar-cookies');
+        const rechazar = document.getElementById('rechazar-cookies');
+        const configurar = document.getElementById('configurar-cookies');
+        const decision = localStorage.getItem(COOKIE_KEY);
+
+        if (decision === 'aceptado') {
+            activarAnalytics();
+        } else if (decision !== 'rechazado') {
+            aviso.style.display = 'block';
+        }
+
+        aceptar.addEventListener('click', function () {
+            localStorage.setItem(COOKIE_KEY, 'aceptado');
+            activarAnalytics();
+            aviso.style.display = 'none';
+        });
+      rechazar.addEventListener('click', function () {
+      localStorage.setItem(COOKIE_KEY, 'rechazado');
+
+      // Desactivar el envío de datos a Google Analytics.
+      window['ga-disable-' + GA_ID] = true;
+
+      gtag('consent', 'update', {
+            analytics_storage: 'denied',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied'
+      });
+
+      // Eliminar cookies habituales de Google Analytics.
+      document.cookie.split(';').forEach(function (cookie) {
+            const nombre = cookie.split('=')[0].trim();
+
+            if (nombre === '_ga' || nombre.startsWith('_ga_')) {
+                  document.cookie =
+                  nombre + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+            }
+      });
+
+      aviso.style.display = 'none';
+
+      // Reiniciar la página para aplicar la nueva preferencia.
+      window.location.reload();
+      });
+
+        configurar.addEventListener('click', function () {
+            aviso.style.display = 'block';
+        });
+    });
+</script>
+
 
 </body>
 
