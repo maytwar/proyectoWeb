@@ -1,3 +1,4 @@
+
 {% extends 'partials/sidebar_base.html' %}
 {% load static %}
 
@@ -7,33 +8,27 @@
 
 <div class="bg-white rounded shadow-sm p-4 p-md-5">
 
-    <!-- Encabezado -->
+    <!-- ENCABEZADO -->
     <div class="text-center mb-4">
-
         <div class="mb-3">
             <i class="fas fa-user-edit fa-3x text-primary"></i>
         </div>
 
-        <h2 class="fw-bold mb-2">
-            Editar mi perfil
-        </h2>
+        <h2 class="fw-bold mb-2">Editar mi perfil</h2>
 
         <p class="text-muted">
             Actualiza la información de tu cuenta.
         </p>
-
     </div>
 
+    <!-- MENSAJES AJAX -->
+    <div id="mensajesPerfil" aria-live="polite"></div>
 
-    <!-- Mensajes -->
     {% if messages %}
-
         {% for message in messages %}
-
             <div class="alert alert-{{ message.tags }}
                         alert-dismissible fade show"
                  role="alert">
-
                 {{ message }}
 
                 <button type="button"
@@ -41,192 +36,146 @@
                         data-bs-dismiss="alert"
                         aria-label="Cerrar">
                 </button>
-
             </div>
-
         {% endfor %}
-
     {% endif %}
 
-
-    <!-- Formulario -->
-    <form method="POST" enctype="multipart/form-data">
+    <!-- FORMULARIO -->
+    <form id="formPerfil"
+          method="POST"
+          enctype="multipart/form-data">
 
         {% csrf_token %}
 
-
-        <!-- Usuario -->
+        <!-- USUARIO -->
         <div class="mb-3">
-
             <label for="username"
                    class="form-label fw-semibold">
-
                 <i class="fas fa-user text-primary me-2"></i>
                 Usuario
-
             </label>
 
-            <input
-                type="text"
-                id="username"
-                name="username"
-                class="form-control"
-                value="{{ request.user.username|default:'' }}"
-                placeholder="Nombre de usuario"
-                required>
-
+            <input type="text"
+                   id="username"
+                   name="username"
+                   class="form-control"
+                   value="{{ request.user.username|default:'' }}"
+                   placeholder="Nombre de usuario"
+                   required>
         </div>
 
-
-        <!-- Correo -->
+        <!-- CORREO -->
         <div class="mb-3">
-
             <label for="email"
                    class="form-label fw-semibold">
-
                 <i class="fas fa-envelope text-primary me-2"></i>
                 Correo electrónico
-
             </label>
 
-            <input
-                type="email"
-                id="email"
-                name="email"
-                class="form-control"
-                value="{{ request.user.email|default:'' }}"
-                placeholder="correo@ejemplo.com"
-                required>
-
+            <input type="email"
+                   id="email"
+                   name="email"
+                   class="form-control"
+                   value="{{ request.user.email|default:'' }}"
+                   placeholder="correo@ejemplo.com"
+                   required>
         </div>
 
-
-        <!-- Nombre -->
+        <!-- NOMBRE -->
         <div class="mb-3">
-
             <label for="first_name"
                    class="form-label fw-semibold">
-
                 <i class="fas fa-id-card text-primary me-2"></i>
                 Nombre
-
             </label>
 
-            <input
-                type="text"
-                id="first_name"
-                name="first_name"
-                class="form-control"
-                value="{{ request.user.first_name|default:'' }}"
-                placeholder="Nombre">
-
+            <input type="text"
+                   id="first_name"
+                   name="first_name"
+                   class="form-control"
+                   value="{{ request.user.first_name|default:'' }}"
+                   placeholder="Nombre">
         </div>
 
-
-        <!-- Apellidos -->
+        <!-- APELLIDOS -->
         <div class="row">
 
             <div class="col-md-6 mb-3">
-
                 <label for="apellido_paterno"
                        class="form-label fw-semibold">
-
                     Apellido paterno
-
                 </label>
 
-                <input
-                    type="text"
-                    id="apellido_paterno"
-                    name="apellido_paterno"
-                    class="form-control"
-                    value="{{ perfil.apellido_paterno|default:'' }}"
-                    placeholder="Apellido paterno">
-
+                <input type="text"
+                       id="apellido_paterno"
+                       name="apellido_paterno"
+                       class="form-control"
+                       value="{{ perfil.apellido_paterno|default:'' }}">
             </div>
 
-
             <div class="col-md-6 mb-3">
-
                 <label for="apellido_materno"
                        class="form-label fw-semibold">
-
                     Apellido materno
-
                 </label>
 
-                <input
-                    type="text"
-                    id="apellido_materno"
-                    name="apellido_materno"
-                    class="form-control"
-                    value="{{ perfil.apellido_materno|default:'' }}"
-                    placeholder="Apellido materno">
-
+                <input type="text"
+                       id="apellido_materno"
+                       name="apellido_materno"
+                       class="form-control"
+                       value="{{ perfil.apellido_materno|default:'' }}">
             </div>
 
         </div>
-
 
         <!-- FOTO DE PERFIL -->
         <div class="mb-4">
 
             <label for="foto"
-                class="form-label fw-semibold">
-
+                   class="form-label fw-semibold">
                 <i class="fas fa-camera text-primary me-2"></i>
                 Foto de perfil
-
             </label>
 
-            <!-- MOSTRAR FOTOGRAFÍA ACTUAL -->
-            {% if perfil.foto_perfil %}
+            <div class="text-center mb-3">
 
-                <div class="text-center mb-3">
+                <div id="contenedorFotoActual">
 
-                    <img
-                        src="{{ perfil.foto_perfil.display_url }}"
-                        alt="Fotografía actual"
-                        class="rounded-circle shadow-sm"
-                        style="width: 120px;
-                            height: 120px;
-                            object-fit: cover;">
+                    {% if perfil.foto_perfil %}
+                        <img id="imagenPerfil"
+                             src="{{ perfil.foto_perfil.display_url }}"
+                             alt="Fotografía actual"
+                             class="rounded-circle shadow-sm"
+                             style="width:120px;
+                                    height:120px;
+                                    object-fit:cover;">
+                    {% else %}
+                        <div id="iconoSinFoto"
+                             class="d-inline-flex align-items-center
+                                    justify-content-center bg-light
+                                    rounded-circle shadow-sm"
+                             style="width:120px;height:120px;">
+                            <i class="fas fa-user fa-4x text-primary"></i>
+                        </div>
+                    {% endif %}
 
-                    <p class="text-muted small mt-2">
+                </div>
+
+                <p class="text-muted small mt-2"
+                   id="textoFoto">
+                    {% if perfil.foto_perfil %}
                         Fotografía actual
-                    </p>
-
-                </div>
-
-            {% else %}
-
-                <!-- MOSTRAR ÍCONO SI NO TIENE FOTO -->
-                <div class="text-center mb-3">
-
-                    <div class="d-inline-flex align-items-center justify-content-center
-                                bg-light rounded-circle shadow-sm"
-                        style="width: 120px; height: 120px;">
-
-                        <i class="fas fa-user fa-4x text-primary"></i>
-
-                    </div>
-
-                    <p class="text-muted small mt-2">
+                    {% else %}
                         Aún no tienes una fotografía de perfil
-                    </p>
+                    {% endif %}
+                </p>
+            </div>
 
-                </div>
-
-            {% endif %}
-
-
-            <!-- SELECCIONAR NUEVA FOTOGRAFÍA -->
-            <input
-                type="file"
-                id="foto"
-                name="foto"
-                class="form-control"
-                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+            <input type="file"
+                   id="foto"
+                   name="foto"
+                   class="form-control"
+                   accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
 
             <small class="text-muted">
                 Selecciona una imagen JPG, PNG o WEBP de máximo 5 MB.
@@ -234,25 +183,20 @@
 
         </div>
 
-
-        <!-- Botones -->
+        <!-- BOTONES -->
         <div class="d-grid gap-2">
 
             <button type="submit"
+                    id="btnGuardarPerfil"
                     class="btn btn-primary">
-
                 <i class="fas fa-save me-2"></i>
                 Guardar cambios
-
             </button>
-
 
             <a href="{% url 'home:perfil' %}"
                class="btn btn-outline-secondary">
-
                 <i class="fas fa-times me-2"></i>
                 Cancelar
-
             </a>
 
         </div>
@@ -260,5 +204,212 @@
     </form>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const formulario = document.getElementById('formPerfil');
+    const mensajes = document.getElementById('mensajesPerfil');
+    const botonGuardar = document.getElementById('btnGuardarPerfil');
+
+    const inputFoto = document.getElementById('foto');
+    const contenedorFoto = document.getElementById('contenedorFotoActual');
+    const textoFoto = document.getElementById('textoFoto');
+
+    const csrfToken = formulario.querySelector(
+        'input[name="csrfmiddlewaretoken"]'
+    ).value;
+
+    let urlTemporal = null;
+    let guardando = false;
+
+    // Mostrar mensaje sin introducir HTML del servidor.
+    function mostrarMensaje(texto, tipo = 'success') {
+        mensajes.replaceChildren();
+
+        const alerta = document.createElement('div');
+        alerta.className =
+            'alert alert-' + tipo + ' alert-dismissible fade show';
+
+        alerta.setAttribute('role', 'alert');
+
+        const contenido = document.createElement('span');
+        contenido.textContent = texto;
+
+        const cerrar = document.createElement('button');
+        cerrar.type = 'button';
+        cerrar.className = 'btn-close';
+        cerrar.setAttribute('data-bs-dismiss', 'alert');
+        cerrar.setAttribute('aria-label', 'Cerrar');
+
+        alerta.append(contenido, cerrar);
+        mensajes.appendChild(alerta);
+    }
+
+    // Mostrar una fotografía en el círculo.
+    function mostrarFotografia(url) {
+        let imagen = document.getElementById('imagenPerfil');
+
+        if (!imagen) {
+            imagen = document.createElement('img');
+            imagen.id = 'imagenPerfil';
+            imagen.alt = 'Fotografía de perfil';
+            imagen.className = 'rounded-circle shadow-sm';
+
+            imagen.style.width = '120px';
+            imagen.style.height = '120px';
+            imagen.style.objectFit = 'cover';
+
+            contenedorFoto.replaceChildren(imagen);
+        }
+
+        imagen.src = url;
+    }
+
+    // Vista previa antes de guardar.
+    inputFoto.addEventListener('change', function () {
+
+        const archivo = inputFoto.files[0];
+
+        if (urlTemporal) {
+            URL.revokeObjectURL(urlTemporal);
+            urlTemporal = null;
+        }
+
+        if (!archivo) return;
+
+        const tiposPermitidos = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+        if (!tiposPermitidos.includes(archivo.type)) {
+            mostrarMensaje(
+                'Solo se permiten imágenes JPG, PNG o WEBP.',
+                'danger'
+            );
+            inputFoto.value = '';
+            return;
+        }
+
+        if (archivo.size > 5 * 1024 * 1024) {
+            mostrarMensaje(
+                'La fotografía no puede superar los 5 MB.',
+                'danger'
+            );
+            inputFoto.value = '';
+            return;
+        }
+
+        urlTemporal = URL.createObjectURL(archivo);
+
+        mostrarFotografia(urlTemporal);
+        textoFoto.textContent = 'Vista previa de la nueva fotografía';
+    });
+
+    // Guardar perfil con AJAX.
+    formulario.addEventListener('submit', async function (evento) {
+
+        evento.preventDefault();
+
+        if (guardando) return;
+
+        guardando = true;
+        botonGuardar.disabled = true;
+
+        const textoOriginal = botonGuardar.innerHTML;
+
+        botonGuardar.innerHTML =
+            '<i class="fas fa-spinner fa-spin me-2"></i> Guardando...';
+
+        try {
+            const datosFormulario = new FormData(formulario);
+
+            const respuesta = await fetch(
+                formulario.action || window.location.href,
+                {
+                    method: 'POST',
+                    body: datosFormulario,
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                }
+            );
+
+            const tipo = respuesta.headers.get('content-type') || '';
+
+            if (!tipo.includes('application/json')) {
+                throw new Error(
+                    'El servidor no devolvió JSON. Revisa tu sesión.'
+                );
+            }
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok || !resultado.success) {
+                throw new Error(
+                    resultado.message ||
+                    'No fue posible actualizar el perfil.'
+                );
+            }
+
+            const perfil = resultado.perfil;
+
+            // Actualizar los campos con los datos guardados.
+            document.getElementById('username').value =
+                perfil.username;
+
+            document.getElementById('email').value =
+                perfil.email;
+
+            document.getElementById('first_name').value =
+                perfil.first_name || '';
+
+            document.getElementById('apellido_paterno').value =
+                perfil.apellido_paterno || '';
+
+            document.getElementById('apellido_materno').value =
+                perfil.apellido_materno || '';
+
+            // Mostrar fotografía guardada.
+            if (perfil.foto_url) {
+                mostrarFotografia(perfil.foto_url);
+                textoFoto.textContent = 'Fotografía actual';
+            }
+
+            // Limpiar archivo seleccionado.
+            inputFoto.value = '';
+
+            if (urlTemporal) {
+                URL.revokeObjectURL(urlTemporal);
+                urlTemporal = null;
+            }
+
+            mostrarMensaje(resultado.message);
+
+        } catch (error) {
+
+            mostrarMensaje(error.message, 'danger');
+
+        } finally {
+
+            guardando = false;
+            botonGuardar.disabled = false;
+            botonGuardar.innerHTML = textoOriginal;
+        }
+    });
+
+    window.addEventListener('beforeunload', function () {
+        if (urlTemporal) {
+            URL.revokeObjectURL(urlTemporal);
+        }
+    });
+
+});
+</script>
 
 {% endblock panel_content %}

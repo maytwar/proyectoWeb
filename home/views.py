@@ -1,15 +1,16 @@
 
+from django.db import transaction
+from django.db.models import F
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.utils.html import strip_tags
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db import transaction
+from django.contrib.auth.password_validation import validate_password
+from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
 from django.core.files.images import get_image_dimensions
 from .models import Categoria, Archivo, Publicacion, GaleriaPublicacion
-from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
 from .models import Perfil
 from django.contrib.auth import update_session_auth_hash
@@ -20,7 +21,8 @@ from django.views.decorators.http import require_POST
 from .models import Comentario
 from django.shortcuts import get_object_or_404
 from .models import VistaPublicacion
-from django.db.models import F
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 import os
 import uuid
@@ -558,145 +560,125 @@ def crear_publicacion(request):
 @user_passes_test(es_administrador)
 def crear_usuario(request):
 
+    ajax = request.headers.get(
+        'X-Requested-With'
+    ) == 'XMLHttpRequest'
+
     if request.method == 'POST':
 
-        # OBTENER DATOS DEL FORMULARIO
         username = request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
         first_name = request.POST.get('first_name', '').strip()
 
-        apellido_paterno = request.POST.get('apellido_paterno', '').strip()
-        apellido_materno = request.POST.get('apellido_materno', '').strip()
+        apellido_paterno = request.POST.get(
+            'apellido_paterno', ''
+        ).strip()
+
+        apellido_materno = request.POST.get(
+            'apellido_materno', ''
+        ).strip()
 
         rol = request.POST.get('rol', 'colaborador')
 
         password1 = request.POST.get('password1', '')
         password2 = request.POST.get('password2', '')
 
-        # CONSERVAR DATOS SI HAY ERRORES
         contexto = {
             'datos': request.POST
         }
 
-        # VALIDAR CAMPOS OBLIGATORIOS
-        if not username or not email or not password1 or not password2:
+        # Responder errores tanto en AJAX como en HTML.
+        def responder_error(mensaje, status=400):
 
-            messages.error(
+            if ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': mensaje
+                }, status=status)
+
+            messages.error(request, mensaje)
+
+            return render(
                 request,
+                'home/crear_usuario.html',
+                contexto
+            )
+
+        # Campos obligatorios.
+        if not username or not email or not password1 or not password2:
+            return responder_error(
                 'Debes completar todos los campos obligatorios.'
             )
 
-            return render(
-                request,
-                'home/crear_usuario.html',
-                contexto
-            )
-
-        # VALIDAR USUARIO DUPLICADO
-        if User.objects.filter(username__iexact=username).exists():
-
-            messages.error(
-                request,
+        # Usuario duplicado.
+        if User.objects.filter(
+            username__iexact=username
+        ).exists():
+            return responder_error(
                 'Este nombre de usuario ya está registrado.'
             )
 
-            return render(
-                request,
-                'home/crear_usuario.html',
-                contexto
-            )
-
-        # VALIDAR CORREO
+        # Correo válido.
         try:
             validate_email(email)
 
         except ValidationError:
-
-            messages.error(
-                request,
+            return responder_error(
                 'Introduce un correo electrónico válido.'
             )
 
-            return render(
-                request,
-                'home/crear_usuario.html',
-                contexto
-            )
-
-        # VALIDAR CORREO DUPLICADO
-        if User.objects.filter(email__iexact=email).exists():
-
-            messages.error(
-                request,
+        # Correo duplicado.
+        if User.objects.filter(
+            email__iexact=email
+        ).exists():
+            return responder_error(
                 'Este correo electrónico ya está registrado.'
             )
 
-            return render(
-                request,
-                'home/crear_usuario.html',
-                contexto
-            )
-
-        # VALIDAR ROL
-        if rol not in ['colaborador', 'editor', 'administrador']:
-
-            messages.error(
-                request,
+        # Rol válido.
+        if rol not in [
+            'colaborador',
+            'editor',
+            'administrador'
+        ]:
+            return responder_error(
                 'Selecciona un rol válido.'
             )
 
-            return render(
-                request,
-                'home/crear_usuario.html',
-                contexto
-            )
-
-        # VERIFICAR CONTRASEÑAS
+        # Confirmación de contraseña.
         if password1 != password2:
-
-            messages.error(
-                request,
+            return responder_error(
                 'Las contraseñas no coinciden.'
             )
 
-            return render(
-                request,
-                'home/crear_usuario.html',
-                contexto
-            )
+        # Seguridad de contraseña.
+        usuario_temporal = User(
+            username=username,
+            email=email,
+            first_name=first_name
+        )
 
-        # VALIDAR SEGURIDAD
         try:
-
-            usuario_temporal = User(
-                username=username,
-                email=email,
-                first_name=first_name
-            )
-
             validate_password(
                 password1,
                 user=usuario_temporal
             )
 
         except ValidationError as errores:
-
-            for error in errores.messages:
-                messages.error(request, error)
-
-            return render(
-                request,
-                'home/crear_usuario.html',
-                contexto
+            return responder_error(
+                ' '.join(errores.messages)
             )
 
-        # CONFIGURAR PERMISOS SEGÚN EL ROL
-        es_staff = rol in ['editor', 'administrador']
+        # Configuración de permisos.
+        es_staff = rol in [
+            'editor',
+            'administrador'
+        ]
+
         es_superuser = rol == 'administrador'
 
-        # GUARDAR EN POSTGRESQL
+        # Guardar en PostgreSQL.
         try:
-
             with transaction.atomic():
 
                 usuario = User.objects.create_user(
@@ -708,7 +690,6 @@ def crear_usuario(request):
                     is_superuser=es_superuser
                 )
 
-                # EL SIGNAL CREA EL PERFIL AUTOMÁTICAMENTE
                 perfil, _ = Perfil.objects.get_or_create(
                     user=usuario
                 )
@@ -719,18 +700,31 @@ def crear_usuario(request):
                 perfil.save()
 
         except Exception:
-
-            messages.error(
-                request,
-                'Ocurrió un error al crear el usuario.'
+            return responder_error(
+                'No fue posible crear el usuario. '
+                'Verifica los datos e inténtalo nuevamente.',
+                500
             )
 
-            return render(
-                request,
-                'home/crear_usuario.html',
-                contexto
-            )
+        # Respuesta AJAX.
+        if ajax:
+            return JsonResponse({
+                'success': True,
+                'message': 'El usuario se creó correctamente.',
+                'usuario': {
+                    'id': usuario.id,
+                    'username': usuario.username,
+                    'nombre': usuario.first_name,
+                    'email': usuario.email,
+                    'apellido_paterno': perfil.apellido_paterno,
+                    'apellido_materno': perfil.apellido_materno,
+                    'rol': rol,
+                    'activo': usuario.is_active,
+                    'es_superuser': usuario.is_superuser
+                }
+            }, status=201)
 
+        # Respuesta tradicional.
         messages.success(
             request,
             'El usuario se creó correctamente.'
@@ -746,8 +740,12 @@ def crear_usuario(request):
 @user_passes_test(es_administrador)
 def editar_usuario(request, usuario_id):
 
-    usuario = User.objects.get(pk=usuario_id)
+    usuario = get_object_or_404(User, pk=usuario_id)
     perfil, _ = Perfil.objects.get_or_create(user=usuario)
+
+    ajax = request.headers.get(
+        'X-Requested-With'
+    ) == 'XMLHttpRequest'
 
     if request.method == 'POST':
 
@@ -767,53 +765,114 @@ def editar_usuario(request, usuario_id):
             'datos': request.POST
         }
 
-        if not username or not email:
-            messages.error(request, 'El usuario y el correo son obligatorios.')
-            return render(request, 'home/crear_usuario.html', contexto)
+        def responder_error(mensaje, status=400):
+            if ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': mensaje
+                }, status=status)
 
+            messages.error(request, mensaje)
+            return render(
+                request,
+                'home/crear_usuario.html',
+                contexto
+            )
+
+        # Validar campos obligatorios
+        if not username or not email:
+            return responder_error(
+                'El usuario y el correo son obligatorios.'
+            )
+
+        # Validar correo
         try:
             validate_email(email)
         except ValidationError:
-            messages.error(request, 'Introduce un correo válido.')
-            return render(request, 'home/crear_usuario.html', contexto)
+            return responder_error(
+                'Introduce un correo válido.'
+            )
 
-        if User.objects.filter(username__iexact=username).exclude(pk=usuario.pk).exists():
-            messages.error(request, 'El nombre de usuario ya está registrado.')
-            return render(request, 'home/crear_usuario.html', contexto)
+        # Validar usuario duplicado
+        if User.objects.filter(
+            username__iexact=username
+        ).exclude(pk=usuario.pk).exists():
+            return responder_error(
+                'El nombre de usuario ya está registrado.'
+            )
 
-        if User.objects.filter(email__iexact=email).exclude(pk=usuario.pk).exists():
-            messages.error(request, 'El correo ya está registrado.')
-            return render(request, 'home/crear_usuario.html', contexto)
+        # Validar correo duplicado
+        if User.objects.filter(
+            email__iexact=email
+        ).exclude(pk=usuario.pk).exists():
+            return responder_error(
+                'El correo ya está registrado.'
+            )
 
-        if rol not in ['colaborador', 'editor', 'administrador']:
-            messages.error(request, 'Selecciona un rol válido.')
-            return render(request, 'home/crear_usuario.html', contexto)
+        # Validar rol
+        if rol not in [
+            'colaborador',
+            'editor',
+            'administrador'
+        ]:
+            return responder_error(
+                'Selecciona un rol válido.'
+            )
 
-        if usuario.pk == request.user.pk and rol != 'administrador':
-            messages.error(request, 'No puedes quitarte tu propio rol de administrador.')
-            return render(request, 'home/crear_usuario.html', contexto)
+        # Proteger el rol del administrador actual
+        if (
+            usuario.pk == request.user.pk
+            and rol != 'administrador'
+        ):
+            return responder_error(
+                'No puedes quitarte tu propio rol de administrador.',
+                403
+            )
 
+        # Proteger otros superusuarios
+        if (
+            usuario.is_superuser
+            and usuario.pk != request.user.pk
+            and rol != 'administrador'
+        ):
+            return responder_error(
+                'No puedes quitar el rol de otro administrador.',
+                403
+            )
+
+        # Validar contraseñas
         if password1 or password2:
 
             if password1 != password2:
-                messages.error(request, 'Las contraseñas no coinciden.')
-                return render(request, 'home/crear_usuario.html', contexto)
+                return responder_error(
+                    'Las contraseñas no coinciden.'
+                )
 
             try:
-                validate_password(password1, user=usuario)
+                validate_password(
+                    password1,
+                    user=usuario
+                )
             except ValidationError as errores:
-                for error in errores.messages:
-                    messages.error(request, error)
-                return render(request, 'home/crear_usuario.html', contexto)
+                return responder_error(
+                    ' '.join(errores.messages)
+                )
 
+        # Guardar cambios
         with transaction.atomic():
 
             usuario.username = username
             usuario.email = email
             usuario.first_name = first_name
 
-            usuario.is_staff = rol in ['editor', 'administrador']
-            usuario.is_superuser = rol == 'administrador'
+            usuario.is_staff = rol in [
+                'editor',
+                'administrador'
+            ]
+
+            usuario.is_superuser = (
+                rol == 'administrador'
+            )
 
             if password1:
                 usuario.set_password(password1)
@@ -824,13 +883,43 @@ def editar_usuario(request, usuario_id):
             perfil.apellido_materno = apellido_materno
             perfil.save()
 
-        if usuario.pk == request.user.pk and password1:
-            update_session_auth_hash(request, usuario)
+        # Conservar la sesión si cambió su contraseña
+        if (
+            usuario.pk == request.user.pk
+            and password1
+        ):
+            update_session_auth_hash(
+                request,
+                usuario
+            )
 
-        messages.success(request, 'El usuario se actualizó correctamente.')
+        # Respuesta AJAX
+        if ajax:
+            return JsonResponse({
+                'success': True,
+                'message': 'El usuario se actualizó correctamente.',
+                'usuario': {
+                    'id': usuario.id,
+                    'username': usuario.username,
+                    'nombre': usuario.first_name,
+                    'email': usuario.email,
+                    'apellido_paterno': perfil.apellido_paterno,
+                    'apellido_materno': perfil.apellido_materno,
+                    'rol': rol,
+                    'activo': usuario.is_active,
+                    'es_superuser': usuario.is_superuser
+                }
+            })
+
+        # Respuesta tradicional
+        messages.success(
+            request,
+            'El usuario se actualizó correctamente.'
+        )
 
         return redirect('home:crudUsuarios')
 
+    # Mostrar formulario para solicitudes GET
     return render(
         request,
         'home/crear_usuario.html',
@@ -841,50 +930,59 @@ def editar_usuario(request, usuario_id):
     )
 
 @user_passes_test(es_administrador)
+@require_POST
 def cambiar_estado_usuario(request, usuario_id):
 
-    # Solo permitir solicitudes POST
-    if request.method != 'POST':
-        messages.error(
-            request,
-            'No se permite realizar esta acción.'
-        )
-        return redirect('home:crudUsuarios')
+    ajax = request.headers.get(
+        'X-Requested-With'
+    ) == 'XMLHttpRequest'
 
-    # Buscar usuario
     usuario = get_object_or_404(User, pk=usuario_id)
 
-    # Evitar que el administrador se bloquee a sí mismo
     if usuario.pk == request.user.pk:
-        messages.error(
-            request,
-            'No puedes bloquear tu propia cuenta.'
-        )
+        mensaje = 'No puedes bloquear tu propia cuenta.'
+
+        if ajax:
+            return JsonResponse({
+                'success': False,
+                'message': mensaje
+            }, status=403)
+
+        messages.error(request, mensaje)
         return redirect('home:crudUsuarios')
 
-    # Proteger otras cuentas de administrador
     if usuario.is_superuser:
-        messages.error(
-            request,
-            'No puedes cambiar el estado de otro administrador desde esta opción.'
-        )
+        mensaje = 'No puedes cambiar el estado de otro administrador.'
+
+        if ajax:
+            return JsonResponse({
+                'success': False,
+                'message': mensaje
+            }, status=403)
+
+        messages.error(request, mensaje)
         return redirect('home:crudUsuarios')
 
-    # Cambiar estado
     usuario.is_active = not usuario.is_active
     usuario.save(update_fields=['is_active'])
 
-    if usuario.is_active:
-        messages.success(
-            request,
-            f'El usuario {usuario.username} fue desbloqueado correctamente.'
-        )
-    else:
-        messages.success(
-            request,
-            f'El usuario {usuario.username} fue bloqueado correctamente.'
-        )
+    mensaje = (
+        f'El usuario {usuario.username} fue desbloqueado correctamente.'
+        if usuario.is_active
+        else f'El usuario {usuario.username} fue bloqueado correctamente.'
+    )
 
+    if ajax:
+        return JsonResponse({
+            'success': True,
+            'message': mensaje,
+            'usuario': {
+                'id': usuario.id,
+                'activo': usuario.is_active
+            }
+        })
+
+    messages.success(request, mensaje)
     return redirect('home:crudUsuarios')
 
 @login_required
@@ -970,31 +1068,37 @@ def crud_cambiar_contrasena(request):
     )
 
 @user_passes_test(es_administrador)
+@require_POST
 def eliminar_usuario(request, usuario_id):
 
-    if request.method != 'POST':
-        messages.error(
-            request,
-            'No se permite realizar esta acción.'
-        )
-        return redirect('home:crudUsuarios')
+    ajax = request.headers.get(
+        'X-Requested-With'
+    ) == 'XMLHttpRequest'
 
     usuario = get_object_or_404(User, pk=usuario_id)
 
-    # Evitar eliminar nuestra propia cuenta
     if usuario.pk == request.user.pk:
-        messages.error(
-            request,
-            'No puedes eliminar tu propia cuenta.'
-        )
+        mensaje = 'No puedes eliminar tu propia cuenta.'
+
+        if ajax:
+            return JsonResponse({
+                'success': False,
+                'message': mensaje
+            }, status=403)
+
+        messages.error(request, mensaje)
         return redirect('home:crudUsuarios')
 
-    # Proteger otras cuentas de administrador
     if usuario.is_superuser:
-        messages.error(
-            request,
-            'No puedes eliminar otra cuenta de administrador.'
-        )
+        mensaje = 'No puedes eliminar otra cuenta de administrador.'
+
+        if ajax:
+            return JsonResponse({
+                'success': False,
+                'message': mensaje
+            }, status=403)
+
+        messages.error(request, mensaje)
         return redirect('home:crudUsuarios')
 
     nombre_usuario = usuario.username
@@ -1004,45 +1108,71 @@ def eliminar_usuario(request, usuario_id):
             usuario.delete()
 
     except Exception:
-        messages.error(
-            request,
-            'No fue posible eliminar el usuario. Revisa si tiene registros relacionados.'
+        mensaje = (
+            'No fue posible eliminar el usuario. '
+            'Puede tener registros relacionados.'
         )
+
+        if ajax:
+            return JsonResponse({
+                'success': False,
+                'message': mensaje
+            }, status=409)
+
+        messages.error(request, mensaje)
         return redirect('home:crudUsuarios')
 
-    messages.success(
-        request,
+    mensaje = (
         f'El usuario {nombre_usuario} fue eliminado correctamente.'
     )
 
+    if ajax:
+        return JsonResponse({
+            'success': True,
+            'message': mensaje,
+            'id': usuario_id
+        })
+
+    messages.success(request, mensaje)
     return redirect('home:crudUsuarios')
 
 @staff_member_required
 def crud_categorias(request):
 
     if request.method == 'POST':
-
         nombre = request.POST.get('nombre', '').strip()
 
-        if nombre:
-            Categoria.objects.create(
-                nombre=nombre,
-                fk_user=request.user
-            )
+        if not nombre:
+            return JsonResponse({
+                'success': False,
+                'message': 'Debes ingresar el nombre de la categoría.'
+            }, status=400)
 
-            messages.success(
-                request,
-                'Categoría agregada correctamente.'
-            )
+        if Categoria.objects.filter(nombre__iexact=nombre).exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'Esta categoría ya existe.'
+            }, status=400)
 
-            return redirect('home:crudCategorias')
-
-        messages.error(
-            request,
-            'Debes ingresar el nombre de la categoría.'
+        categoria = Categoria.objects.create(
+            nombre=nombre,
+            fk_user=request.user
         )
 
-    categorias = Categoria.objects.all().order_by('-createdat')
+        return JsonResponse({
+            'success': True,
+            'message': 'Categoría agregada correctamente.',
+            'categoria': {
+                'id': categoria.id,
+                'nombre': categoria.nombre,
+                'usuario': request.user.username,
+                'fecha': categoria.createdat.strftime('%Y-%m-%d %H:%M')
+            }
+        })
+
+    categorias = Categoria.objects.select_related(
+        'fk_user'
+    ).order_by('-createdat')
 
     return render(
         request,
@@ -1067,49 +1197,45 @@ def crud_comentarios(request):
 @staff_member_required
 @require_POST
 def aprobar_comentario(request, pk):
-
     comentario = get_object_or_404(Comentario, pk=pk)
 
     comentario.estado = Comentario.ESTADO_APROBADO
-    comentario.save()
+    comentario.save(update_fields=['estado'])
 
-    messages.success(
-        request,
-        'Comentario aprobado correctamente.'
-    )
-
-    return redirect('home:crudComentarios')
+    return JsonResponse({
+        'success': True,
+        'message': 'Comentario aprobado correctamente.',
+        'id': comentario.id,
+        'estado': 'aprobado'
+    })
 
 @staff_member_required
 @require_POST
 def bloquear_comentario(request, pk):
-
     comentario = get_object_or_404(Comentario, pk=pk)
 
     comentario.estado = Comentario.ESTADO_BLOQUEADO
-    comentario.save()
+    comentario.save(update_fields=['estado'])
 
-    messages.success(
-        request,
-        'Comentario bloqueado correctamente.'
-    )
-
-    return redirect('home:crudComentarios')
+    return JsonResponse({
+        'success': True,
+        'message': 'Comentario bloqueado correctamente.',
+        'id': comentario.id,
+        'estado': 'bloqueado'
+    })
 
 @staff_member_required
 @require_POST
 def eliminar_comentario(request, pk):
-
     comentario = get_object_or_404(Comentario, pk=pk)
 
     comentario.delete()
 
-    messages.success(
-        request,
-        'Comentario eliminado correctamente.'
-    )
-
-    return redirect('home:crudComentarios')
+    return JsonResponse({
+        'success': True,
+        'message': 'Comentario eliminado correctamente.',
+        'id': pk
+    })
 
 @staff_member_required
 def crud_noticias(request):
@@ -1356,28 +1482,44 @@ def crud_perfil(request):
         user=usuario
     )
 
+    ajax = request.headers.get(
+        'X-Requested-With'
+    ) == 'XMLHttpRequest'
+
     if request.method == 'POST':
 
         username = request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
         first_name = request.POST.get('first_name', '').strip()
-        apellido_paterno = request.POST.get('apellido_paterno', '').strip()
-        apellido_materno = request.POST.get('apellido_materno', '').strip()
+        apellido_paterno = request.POST.get(
+            'apellido_paterno', ''
+        ).strip()
+        apellido_materno = request.POST.get(
+            'apellido_materno', ''
+        ).strip()
 
         foto = request.FILES.get('foto')
 
-        # VALIDAR CAMPOS OBLIGATORIOS
-        if not username or not email:
+        def responder_error(mensaje, status=400):
 
-            messages.error(
-                request,
-                'El usuario y el correo electrónico son obligatorios.'
-            )
+            if ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': mensaje
+                }, status=status)
+
+            messages.error(request, mensaje)
 
             return render(
                 request,
                 'home/crud_perfil.html',
                 {'perfil': perfil}
+            )
+
+        # VALIDAR CAMPOS OBLIGATORIOS
+        if not username or not email:
+            return responder_error(
+                'El usuario y el correo electrónico son obligatorios.'
             )
 
         # VALIDAR CORREO ELECTRÓNICO
@@ -1385,48 +1527,24 @@ def crud_perfil(request):
             validate_email(email)
 
         except ValidationError:
-
-            messages.error(
-                request,
+            return responder_error(
                 'Introduce un correo electrónico válido.'
-            )
-
-            return render(
-                request,
-                'home/crud_perfil.html',
-                {'perfil': perfil}
             )
 
         # VALIDAR USUARIO DUPLICADO
         if User.objects.filter(
-            username=username
+            username__iexact=username
         ).exclude(pk=usuario.pk).exists():
-
-            messages.error(
-                request,
+            return responder_error(
                 'Este nombre de usuario ya está registrado.'
-            )
-
-            return render(
-                request,
-                'home/crud_perfil.html',
-                {'perfil': perfil}
             )
 
         # VALIDAR CORREO DUPLICADO
         if User.objects.filter(
             email__iexact=email
         ).exclude(pk=usuario.pk).exists():
-
-            messages.error(
-                request,
+            return responder_error(
                 'Este correo electrónico ya está registrado.'
-            )
-
-            return render(
-                request,
-                'home/crud_perfil.html',
-                {'perfil': perfil}
             )
 
         # VALIDAR FOTOGRAFÍA
@@ -1439,79 +1557,50 @@ def crud_perfil(request):
             ]
 
             if foto.content_type not in tipos_permitidos:
-
-                messages.error(
-                    request,
+                return responder_error(
                     'Solo se permiten imágenes JPG, PNG o WEBP.'
                 )
 
-                return render(
-                    request,
-                    'home/crud_perfil.html',
-                    {'perfil': perfil}
-                )
-
-            # MÁXIMO 5 MB
             if foto.size > 5 * 1024 * 1024:
-
-                messages.error(
-                    request,
+                return responder_error(
                     'La fotografía no puede superar los 5 MB.'
                 )
 
-                return render(
-                    request,
-                    'home/crud_perfil.html',
-                    {'perfil': perfil}
-                )
-
-            # COMPROBAR QUE SEA UNA IMAGEN REAL
             try:
-
                 imagen = Image.open(foto)
                 formato = imagen.format
                 imagen.verify()
 
-                formatos_permitidos = [
+                if formato not in [
                     'JPEG',
                     'PNG',
                     'WEBP'
-                ]
-
-                if formato not in formatos_permitidos:
+                ]:
                     raise ValueError('Formato no permitido')
 
-            except (UnidentifiedImageError, OSError, ValueError):
-
-                messages.error(
-                    request,
+            except (
+                UnidentifiedImageError,
+                OSError,
+                ValueError
+            ):
+                return responder_error(
                     'El archivo seleccionado no es una imagen válida.'
-                )
-
-                return render(
-                    request,
-                    'home/crud_perfil.html',
-                    {'perfil': perfil}
                 )
 
             finally:
                 foto.seek(0)
 
-        # GUARDAR CAMBIOS EN POSTGRESQL
+        # GUARDAR CAMBIOS
         with transaction.atomic():
 
-            # ACTUALIZAR USUARIO
             usuario.username = username
             usuario.email = email
             usuario.first_name = first_name
-
             usuario.save()
 
-            # ACTUALIZAR PERFIL
             perfil.apellido_paterno = apellido_paterno
             perfil.apellido_materno = apellido_materno
 
-            # GUARDAR FOTOGRAFÍA SI SE SELECCIONÓ UNA
             if foto:
 
                 archivo = Archivo.objects.create(
@@ -1525,24 +1614,43 @@ def crud_perfil(request):
 
                 perfil.foto_perfil = archivo
 
-            # GUARDAR PERFIL
             perfil.save()
 
-        # MENSAJE DE CONFIRMACIÓN
+        # RESPUESTA AJAX
+        if ajax:
+
+            foto_url = None
+
+            if perfil.foto_perfil:
+                foto_url = perfil.foto_perfil.display_url
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Tu perfil se actualizó correctamente.',
+                'perfil': {
+                    'username': usuario.username,
+                    'email': usuario.email,
+                    'first_name': usuario.first_name,
+                    'apellido_paterno': perfil.apellido_paterno,
+                    'apellido_materno': perfil.apellido_materno,
+                    'foto_url': foto_url
+                }
+            })
+
+        # RESPUESTA TRADICIONAL
         messages.success(
             request,
             'Tu perfil se actualizó correctamente.'
         )
 
-        # REGRESAR A MI PERFIL
         return redirect('home:perfil')
 
-    # MOSTRAR FORMULARIO CUANDO LA PETICIÓN ES GET
     return render(
         request,
         'home/crud_perfil.html',
         {'perfil': perfil}
     )
+
 
 @user_passes_test(es_administrador)
 def crud_usuarios(request):
@@ -1560,52 +1668,72 @@ def crud_usuarios(request):
     )
 
 @staff_member_required
+@require_http_methods(["GET", "POST"])
 def editar_categoria(request, pk):
 
     categoria = get_object_or_404(Categoria, pk=pk)
 
-    if request.method == 'POST':
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'categoria': {
+                'id': categoria.id,
+                'nombre': categoria.nombre
+            }
+        })
 
-        nombre = request.POST.get('nombre', '').strip()
+    nombre = request.POST.get('nombre', '').strip()
 
-        if nombre:
+    if not nombre:
+        return JsonResponse({
+            'success': False,
+            'message': 'El nombre no puede estar vacío.'
+        }, status=400)
 
-            categoria.nombre = nombre
-            categoria.save()
+    if Categoria.objects.filter(
+        nombre__iexact=nombre
+    ).exclude(pk=pk).exists():
+        return JsonResponse({
+            'success': False,
+            'message': 'Ya existe otra categoría con ese nombre.'
+        }, status=400)
 
-            messages.success(
-                request,
-                'Categoría actualizada correctamente.'
-            )
+    categoria.nombre = nombre
+    categoria.save(update_fields=['nombre'])
 
-            return redirect('home:crudCategorias')
-
-        messages.error(
-            request,
-            'El nombre de la categoría no puede estar vacío.'
-        )
-
-    return render(
-        request,
-        'home/editar_categoria.html',
-        {'categoria': categoria}
-    )
+    return JsonResponse({
+        'success': True,
+        'message': 'Categoría actualizada correctamente.',
+        'categoria': {
+            'id': categoria.id,
+            'nombre': categoria.nombre
+        }
+    })
 
 @staff_member_required
+@require_POST
 def eliminar_categoria(request, pk):
 
     categoria = get_object_or_404(Categoria, pk=pk)
 
-    if request.method == 'POST':
-
+    try:
         categoria.delete()
+    except Exception:
+        return JsonResponse({
+            'success': False,
+            'message': 'No fue posible eliminar la categoría. Puede tener registros relacionados.'
+        }, status=409)
 
-        messages.success(
-            request,
-            'Categoría eliminada correctamente.'
-        )
-
-    return redirect('home:crudCategorias')
+    return JsonResponse({
+        'success': True,
+        'message': 'Categoría eliminada correctamente.',
+        'id': pk
+    })
 
 def aviso_privacidad(request):
     return render(request, 'home/aviso_privacidad.html')
+
+def es_peticion_ajax(request):
+    return request.headers.get(
+        'X-Requested-With'
+    ) == 'XMLHttpRequest'

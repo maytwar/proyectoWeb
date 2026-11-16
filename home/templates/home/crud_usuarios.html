@@ -1,3 +1,4 @@
+
 {% extends 'partials/sidebar_base.html' %}
 {% load static %}
 
@@ -7,12 +8,11 @@
 
 <div class="bg-white rounded shadow-sm p-4">
 
+    <!-- ENCABEZADO -->
     <div class="d-flex flex-column flex-md-row
-                justify-content-between
-                align-items-md-center mb-4">
+                justify-content-between align-items-md-center mb-4">
 
         <div>
-
             <h2 class="fw-bold mb-1">
                 Gestión de usuarios
             </h2>
@@ -20,49 +20,47 @@
             <p class="text-muted mb-0">
                 Crear, editar, bloquear o eliminar cuentas del sistema.
             </p>
-
         </div>
 
-
-        <a href="{% url 'home:crearUsuario' %}"
-           class="btn btn-primary mt-3 mt-md-0">
-
+        <button type="button"
+                id="btnCrearUsuario"
+                class="btn btn-primary mt-3 mt-md-0">
             <i class="fas fa-user-plus me-2"></i>
             Crear usuario
-
-        </a>
-
+        </button>
     </div>
 
+    <!-- MENSAJES AJAX -->
+    <div id="mensajesAjax" aria-live="polite"></div>
 
     {% if messages %}
-
         {% for message in messages %}
-
             <div class="alert alert-{{ message.tags }}
                         alert-dismissible fade show"
                  role="alert">
-
                 {{ message }}
 
                 <button type="button"
                         class="btn-close"
-                        data-bs-dismiss="alert">
+                        data-bs-dismiss="alert"
+                        aria-label="Cerrar">
                 </button>
-
             </div>
-
         {% endfor %}
-
     {% endif %}
 
+    <!-- TOKEN CSRF -->
+    <div id="csrfUsuarios" class="d-none">
+        {% csrf_token %}
+    </div>
 
+    <!-- TABLA -->
     <div class="table-responsive">
 
-        <table class="table table-striped table-hover align-middle">
+        <table class="table table-striped table-hover align-middle"
+               id="tablaUsuarios">
 
             <thead class="table-primary">
-
                 <tr>
                     <th>#</th>
                     <th>Usuario</th>
@@ -72,164 +70,916 @@
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
-
             </thead>
 
             <tbody>
 
                 {% for user in usuarios %}
 
-                <tr>
+                <tr data-id="{{ user.id }}">
 
-                    <td>{{ forloop.counter }}</td>
+                    <td class="numero-fila">
+                        {{ forloop.counter }}
+                    </td>
 
-                    <td>{{ user.username }}</td>
+                    <td class="celda-username">
+                        {{ user.username }}
+                    </td>
 
-                    <td>
+                    <td class="celda-nombre">
                         {{ user.first_name|default:"-" }}
                     </td>
 
-                    <td>
+                    <td class="celda-email">
                         {{ user.email|default:"-" }}
                     </td>
 
-                    <td>
-
+                    <td class="celda-rol">
                         {% if user.is_superuser %}
-
                             <span class="badge bg-primary">
                                 Administrador
                             </span>
-
                         {% elif user.is_staff %}
-
                             <span class="badge bg-info text-dark">
                                 Editor
                             </span>
-
                         {% else %}
-
                             <span class="badge bg-secondary">
                                 Colaborador
                             </span>
-
                         {% endif %}
-
                     </td>
 
-
-                    <td>
-
+                    <td class="celda-estado">
                         {% if user.is_active %}
-
                             <span class="badge bg-success">
                                 Activo
                             </span>
-
                         {% else %}
-
                             <span class="badge bg-danger">
                                 Bloqueado
                             </span>
-
                         {% endif %}
-
                     </td>
 
+                    <td class="celda-acciones">
+                        <div class="d-flex gap-1 flex-wrap">
 
-                    <td>
+                            <!-- EDITAR -->
+                            <button type="button"
+                                    class="btn btn-info btn-sm btn-editar"
 
-                        <div class="d-flex gap-1">
+                                    data-url="{% url 'home:editarUsuario' user.id %}"
 
-                            <a href="{% url 'home:editarUsuario' user.id %}"
-                                class="btn btn-info btn-sm">
+                                    data-username="{{ user.username }}"
+                                    data-email="{{ user.email }}"
+                                    data-nombre="{{ user.first_name }}"
+
+                                    data-paterno="{{ user.perfil.apellido_paterno|default:'' }}"
+                                    data-materno="{{ user.perfil.apellido_materno|default:'' }}"
+
+                                    data-rol="{% if user.is_superuser %}administrador{% elif user.is_staff %}editor{% else %}colaborador{% endif %}">
+
                                 <i class="fas fa-edit me-1"></i>
                                 Editar
-                            </a>
+                            </button>
 
-                            <form method="POST"
-                                action="{% url 'home:cambiarEstadoUsuario' user.id %}">
+                            <!-- BLOQUEAR / DESBLOQUEAR -->
+                            <button type="button"
+                                    class="btn btn-warning btn-sm btn-estado"
 
-                                {% csrf_token %}
-
-                                <button
-                                    type="submit"
-                                    class="btn btn-warning btn-sm"
+                                    data-url="{% url 'home:cambiarEstadoUsuario' user.id %}"
 
                                     {% if user.id == request.user.id or user.is_superuser %}
                                         disabled
-                                    {% endif %}
+                                    {% endif %}>
 
-                                    onclick="return confirm('¿Estás seguro de cambiar el estado de este usuario?');">
+                                {% if user.is_active %}
+                                    <i class="fas fa-lock me-1"></i>
+                                    Bloquear
+                                {% else %}
+                                    <i class="fas fa-lock-open me-1"></i>
+                                    Desbloquear
+                                {% endif %}
+                            </button>
 
-                                    {% if user.is_active %}
+                            <!-- ELIMINAR -->
+                            <button type="button"
+                                    class="btn btn-danger btn-sm btn-eliminar"
 
-                                        <i class="fas fa-lock me-1"></i>
-                                        Bloquear
-
-                                    {% else %}
-
-                                        <i class="fas fa-lock-open me-1"></i>
-                                        Desbloquear
-
-                                    {% endif %}
-
-                                </button>
-
-                            </form>
-
-                            <form method="POST"
-                                action="{% url 'home:eliminarUsuario' user.id %}">
-
-                                {% csrf_token %}
-
-                                <button
-                                    type="submit"
-                                    class="btn btn-danger btn-sm"
+                                    data-url="{% url 'home:eliminarUsuario' user.id %}"
 
                                     {% if user.id == request.user.id or user.is_superuser %}
                                         disabled
-                                    {% endif %}
+                                    {% endif %}>
 
-                                    onclick="return confirm('¿Estás seguro de eliminar este usuario?');">
-
-                                    <i class="fas fa-trash-alt me-1"></i>
-                                    Eliminar
-
-                                </button>
-
-                            </form>
+                                <i class="fas fa-trash-alt me-1"></i>
+                                Eliminar
+                            </button>
 
                         </div>
-
                     </td>
-
                 </tr>
-
 
                 {% empty %}
 
-                <tr>
-
+                <tr id="filaVacia">
                     <td colspan="7"
                         class="text-center text-muted py-4">
 
                         <i class="fas fa-users fa-2x mb-2 d-block"></i>
-
                         No hay usuarios registrados.
-
                     </td>
-
                 </tr>
 
                 {% endfor %}
 
             </tbody>
-
         </table>
-
     </div>
-
 </div>
+
+
+<!-- MODAL CREAR / EDITAR USUARIO -->
+
+<div class="modal fade"
+     id="modalUsuario"
+     tabindex="-1"
+     aria-labelledby="tituloModalUsuario"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+
+                <h5 class="modal-title" id="tituloModalUsuario">
+                    Crear usuario
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
+            </div>
+
+            <form id="formUsuario"
+                  method="POST"
+                  data-crear-url="{% url 'home:crearUsuario' %}"
+
+                  data-editar-template="{% url 'home:editarUsuario' 0 %}"
+                  data-estado-template="{% url 'home:cambiarEstadoUsuario' 0 %}"
+                  data-eliminar-template="{% url 'home:eliminarUsuario' 0 %}">
+
+                {% csrf_token %}
+
+                <div class="modal-body">
+
+                    <div id="errorModalUsuario"
+                         aria-live="polite"></div>
+
+                    <div class="row g-3">
+
+                        <!-- USUARIO -->
+                        <div class="col-md-6">
+                            <label for="modalUsername"
+                                   class="form-label fw-semibold">
+                                Usuario *
+                            </label>
+
+                            <input type="text"
+                                   id="modalUsername"
+                                   name="username"
+                                   class="form-control"
+                                   autocomplete="username"
+                                   required>
+                        </div>
+
+                        <!-- CORREO -->
+                        <div class="col-md-6">
+                            <label for="modalEmail"
+                                   class="form-label fw-semibold">
+                                Correo electrónico *
+                            </label>
+
+                            <input type="email"
+                                   id="modalEmail"
+                                   name="email"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <!-- NOMBRE -->
+                        <div class="col-md-6">
+                            <label for="modalNombre"
+                                   class="form-label fw-semibold">
+                                Nombre
+                            </label>
+
+                            <input type="text"
+                                   id="modalNombre"
+                                   name="first_name"
+                                   class="form-control">
+                        </div>
+
+                        <!-- ROL -->
+                        <div class="col-md-6">
+                            <label for="modalRol"
+                                   class="form-label fw-semibold">
+                                Rol
+                            </label>
+
+                            <select id="modalRol"
+                                    name="rol"
+                                    class="form-select">
+
+                                <option value="colaborador">
+                                    Colaborador
+                                </option>
+
+                                <option value="editor">
+                                    Editor
+                                </option>
+
+                                <option value="administrador">
+                                    Administrador
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- APELLIDO PATERNO -->
+                        <div class="col-md-6">
+                            <label for="modalPaterno"
+                                   class="form-label fw-semibold">
+                                Apellido paterno
+                            </label>
+
+                            <input type="text"
+                                   id="modalPaterno"
+                                   name="apellido_paterno"
+                                   class="form-control">
+                        </div>
+
+                        <!-- APELLIDO MATERNO -->
+                        <div class="col-md-6">
+                            <label for="modalMaterno"
+                                   class="form-label fw-semibold">
+                                Apellido materno
+                            </label>
+
+                            <input type="text"
+                                   id="modalMaterno"
+                                   name="apellido_materno"
+                                   class="form-control">
+                        </div>
+
+                        <!-- CONTRASEÑA -->
+                        <div class="col-md-6">
+                            <label for="modalPassword1"
+                                   class="form-label fw-semibold">
+                                Contraseña
+                            </label>
+
+                            <input type="password"
+                                   id="modalPassword1"
+                                   name="password1"
+                                   class="form-control"
+                                   autocomplete="new-password">
+                        </div>
+
+                        <!-- CONFIRMAR CONTRASEÑA -->
+                        <div class="col-md-6">
+                            <label for="modalPassword2"
+                                   class="form-label fw-semibold">
+                                Confirmar contraseña
+                            </label>
+
+                            <input type="password"
+                                   id="modalPassword2"
+                                   name="password2"
+                                   class="form-control"
+                                   autocomplete="new-password">
+                        </div>
+
+                    </div>
+
+                    <p class="text-muted small mt-3 mb-0"
+                       id="ayudaPassword">
+                        La contraseña es obligatoria para crear una cuenta.
+                    </p>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary"
+                            id="btnGuardarUsuario">
+
+                        <i class="fas fa-save me-2"></i>
+                        Guardar usuario
+                    </button>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- JAVASCRIPT AJAX -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const tabla = document.getElementById('tablaUsuarios');
+    const tbody = tabla.querySelector('tbody');
+
+    const mensajes = document.getElementById('mensajesAjax');
+
+    const formulario = document.getElementById('formUsuario');
+
+    const modalElemento = document.getElementById('modalUsuario');
+    const modalUsuario = new bootstrap.Modal(modalElemento);
+
+    const tituloModal = document.getElementById('tituloModalUsuario');
+    const errorModal = document.getElementById('errorModalUsuario');
+    const btnGuardar = document.getElementById('btnGuardarUsuario');
+    const ayudaPassword = document.getElementById('ayudaPassword');
+
+    const btnCrear = document.getElementById('btnCrearUsuario');
+
+    const campos = {
+        username: document.getElementById('modalUsername'),
+        email: document.getElementById('modalEmail'),
+        nombre: document.getElementById('modalNombre'),
+        paterno: document.getElementById('modalPaterno'),
+        materno: document.getElementById('modalMaterno'),
+        rol: document.getElementById('modalRol'),
+        password1: document.getElementById('modalPassword1'),
+        password2: document.getElementById('modalPassword2')
+    };
+
+    let filaEditando = null;
+    let guardando = false;
+
+    const usuarioActualId = "{{ request.user.id }}";
+
+    const csrfToken = formulario.querySelector(
+        'input[name="csrfmiddlewaretoken"]'
+    ).value;
+
+
+    // ==========================================
+    // UTILIDADES
+    // ==========================================
+
+    function crearUrl(plantilla, id) {
+        return plantilla.replace(/\/0\/(?=$|\?)/, '/' + id + '/');
+    }
+
+    function obtenerUrls(id) {
+        return {
+            editar: crearUrl(formulario.dataset.editarTemplate, id),
+            estado: crearUrl(formulario.dataset.estadoTemplate, id),
+            eliminar: crearUrl(formulario.dataset.eliminarTemplate, id)
+        };
+    }
+
+    function mostrarMensaje(texto, tipo = 'success') {
+        mensajes.replaceChildren();
+
+        const alerta = document.createElement('div');
+
+        alerta.className =
+            'alert alert-' + tipo + ' alert-dismissible fade show';
+
+        alerta.setAttribute('role', 'alert');
+
+        const contenido = document.createElement('span');
+        contenido.textContent = texto;
+
+        const cerrar = document.createElement('button');
+        cerrar.type = 'button';
+        cerrar.className = 'btn-close';
+
+        cerrar.setAttribute('data-bs-dismiss', 'alert');
+        cerrar.setAttribute('aria-label', 'Cerrar');
+
+        alerta.append(contenido, cerrar);
+        mensajes.appendChild(alerta);
+    }
+
+    function mostrarErrorModal(texto) {
+        errorModal.replaceChildren();
+
+        const alerta = document.createElement('div');
+        alerta.className = 'alert alert-danger';
+        alerta.setAttribute('role', 'alert');
+        alerta.textContent = texto;
+
+        errorModal.appendChild(alerta);
+    }
+
+    function crearBadge(texto, clase) {
+        const badge = document.createElement('span');
+
+        badge.className = 'badge ' + clase;
+        badge.textContent = texto;
+
+        return badge;
+    }
+
+    function obtenerRol(usuario) {
+        if (usuario.es_superuser || usuario.rol === 'administrador') {
+            return 'administrador';
+        }
+
+        if (usuario.rol === 'editor') {
+            return 'editor';
+        }
+
+        return 'colaborador';
+    }
+
+    function actualizarNumeracion() {
+        const filas = tbody.querySelectorAll('tr[data-id]');
+
+        filas.forEach(function (fila, indice) {
+            fila.querySelector('.numero-fila').textContent = indice + 1;
+        });
+
+        document.getElementById('filaVacia')?.remove();
+
+        if (filas.length === 0) {
+            const vacia = document.createElement('tr');
+            vacia.id = 'filaVacia';
+
+            const celda = document.createElement('td');
+            celda.colSpan = 7;
+            celda.className = 'text-center text-muted py-4';
+
+            celda.innerHTML =
+                '<i class="fas fa-users fa-2x mb-2 d-block"></i>' +
+                'No hay usuarios registrados.';
+
+            vacia.appendChild(celda);
+            tbody.appendChild(vacia);
+        }
+    }
+
+    async function enviarPeticion(url, datos = null) {
+
+        const opciones = {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        };
+
+        if (datos) {
+            opciones.body = datos;
+        }
+
+        const respuesta = await fetch(url, opciones);
+
+        const tipo = respuesta.headers.get('content-type') || '';
+
+        if (!tipo.includes('application/json')) {
+            throw new Error(
+                'El servidor no devolvió JSON. Revisa tu sesión y permisos.'
+            );
+        }
+
+        const resultado = await respuesta.json();
+
+        if (!respuesta.ok || !resultado.success) {
+            throw new Error(
+                resultado.message ||
+                'No fue posible completar la operación.'
+            );
+        }
+
+        return resultado;
+    }
+
+
+    // ==========================================
+    // CREAR Y ACTUALIZAR FILAS
+    // ==========================================
+
+    function crearBoton(clases, icono, texto, url) {
+        const boton = document.createElement('button');
+
+        boton.type = 'button';
+        boton.className = 'btn btn-sm ' + clases;
+        boton.dataset.url = url;
+
+        boton.innerHTML =
+            '<i class="fas ' + icono + ' me-1"></i> ' + texto;
+
+        return boton;
+    }
+
+    function actualizarFila(fila, usuario) {
+
+        const rol = obtenerRol(usuario);
+
+        fila.dataset.id = usuario.id;
+
+        fila.querySelector('.celda-username').textContent =
+            usuario.username;
+
+        fila.querySelector('.celda-nombre').textContent =
+            usuario.nombre || '-';
+
+        fila.querySelector('.celda-email').textContent =
+            usuario.email || '-';
+
+        const celdaRol = fila.querySelector('.celda-rol');
+        celdaRol.replaceChildren();
+
+        if (rol === 'administrador') {
+            celdaRol.appendChild(
+                crearBadge('Administrador', 'bg-primary')
+            );
+        } else if (rol === 'editor') {
+            celdaRol.appendChild(
+                crearBadge('Editor', 'bg-info text-dark')
+            );
+        } else {
+            celdaRol.appendChild(
+                crearBadge('Colaborador', 'bg-secondary')
+            );
+        }
+
+        const celdaEstado = fila.querySelector('.celda-estado');
+        celdaEstado.replaceChildren();
+
+        celdaEstado.appendChild(
+            crearBadge(
+                usuario.activo ? 'Activo' : 'Bloqueado',
+                usuario.activo ? 'bg-success' : 'bg-danger'
+            )
+        );
+
+        const urls = obtenerUrls(usuario.id);
+
+        const acciones = fila.querySelector('.celda-acciones');
+        acciones.replaceChildren();
+
+        const contenedor = document.createElement('div');
+        contenedor.className = 'd-flex gap-1 flex-wrap';
+
+        const editar = crearBoton(
+            'btn-info btn-editar',
+            'fa-edit',
+            'Editar',
+            urls.editar
+        );
+
+        editar.dataset.username = usuario.username;
+        editar.dataset.email = usuario.email || '';
+        editar.dataset.nombre = usuario.nombre || '';
+        editar.dataset.paterno = usuario.apellido_paterno || '';
+        editar.dataset.materno = usuario.apellido_materno || '';
+        editar.dataset.rol = rol;
+
+        const estado = crearBoton(
+            'btn-warning btn-estado',
+            usuario.activo ? 'fa-lock' : 'fa-lock-open',
+            usuario.activo ? 'Bloquear' : 'Desbloquear',
+            urls.estado
+        );
+
+        const eliminar = crearBoton(
+            'btn-danger btn-eliminar',
+            'fa-trash-alt',
+            'Eliminar',
+            urls.eliminar
+        );
+
+        const protegido =
+            String(usuario.id) === usuarioActualId ||
+            rol === 'administrador';
+
+        estado.disabled = protegido;
+        eliminar.disabled = protegido;
+
+        contenedor.append(editar, estado, eliminar);
+        acciones.appendChild(contenedor);
+    }
+
+    function crearFila(usuario) {
+
+        document.getElementById('filaVacia')?.remove();
+
+        const fila = document.createElement('tr');
+        fila.dataset.id = usuario.id;
+
+        const clases = [
+            'numero-fila',
+            'celda-username',
+            'celda-nombre',
+            'celda-email',
+            'celda-rol',
+            'celda-estado',
+            'celda-acciones'
+        ];
+
+        clases.forEach(function (clase) {
+            const celda = document.createElement('td');
+            celda.className = clase;
+            fila.appendChild(celda);
+        });
+
+        actualizarFila(fila, usuario);
+
+        // Mantener el orden alfabético por usuario.
+        const filas = Array.from(
+            tbody.querySelectorAll('tr[data-id]')
+        );
+
+        const siguiente = filas.find(function (actual) {
+            const nombre = actual.querySelector(
+                '.celda-username'
+            ).textContent;
+
+            return nombre.localeCompare(
+                usuario.username,
+                'es',
+                { sensitivity: 'base' }
+            ) > 0;
+        });
+
+        if (siguiente) {
+            tbody.insertBefore(fila, siguiente);
+        } else {
+            tbody.appendChild(fila);
+        }
+
+        actualizarNumeracion();
+
+        return fila;
+    }
+
+    function ordenarFilas() {
+
+        const filas = Array.from(
+            tbody.querySelectorAll('tr[data-id]')
+        );
+
+        filas.sort(function (a, b) {
+            return a.querySelector('.celda-username').textContent
+                .localeCompare(
+                    b.querySelector('.celda-username').textContent,
+                    'es',
+                    { sensitivity: 'base' }
+                );
+        });
+
+        filas.forEach(function (fila) {
+            tbody.appendChild(fila);
+        });
+
+        actualizarNumeracion();
+    }
+
+
+    // ==========================================
+    // ABRIR MODAL
+    // ==========================================
+
+    function abrirModalCrear() {
+
+        formulario.reset();
+        errorModal.replaceChildren();
+
+        filaEditando = null;
+
+        tituloModal.textContent = 'Crear usuario';
+
+        btnGuardar.innerHTML =
+            '<i class="fas fa-user-plus me-2"></i> Crear usuario';
+
+        formulario.action = formulario.dataset.crearUrl;
+
+        campos.password1.required = true;
+        campos.password2.required = true;
+
+        ayudaPassword.textContent =
+            'La contraseña es obligatoria para crear una cuenta.';
+
+        modalUsuario.show();
+    }
+
+    function abrirModalEditar(fila) {
+
+        formulario.reset();
+        errorModal.replaceChildren();
+
+        filaEditando = fila;
+
+        const boton = fila.querySelector('.btn-editar');
+
+        tituloModal.textContent = 'Editar usuario';
+
+        btnGuardar.innerHTML =
+            '<i class="fas fa-save me-2"></i> Guardar cambios';
+
+        formulario.action = boton.dataset.url;
+
+        campos.username.value = boton.dataset.username || '';
+        campos.email.value = boton.dataset.email || '';
+        campos.nombre.value = boton.dataset.nombre || '';
+        campos.paterno.value = boton.dataset.paterno || '';
+        campos.materno.value = boton.dataset.materno || '';
+        campos.rol.value = boton.dataset.rol || 'colaborador';
+
+        campos.password1.required = false;
+        campos.password2.required = false;
+
+        ayudaPassword.textContent =
+            'Deja las contraseñas vacías para conservar la actual.';
+
+        modalUsuario.show();
+    }
+
+    btnCrear.addEventListener('click', abrirModalCrear);
+
+
+    // ==========================================
+    // GUARDAR CREACIÓN O EDICIÓN
+    // ==========================================
+
+    formulario.addEventListener('submit', async function (evento) {
+
+        evento.preventDefault();
+
+        if (guardando) return;
+
+        guardando = true;
+        btnGuardar.disabled = true;
+        errorModal.replaceChildren();
+
+        const creando = filaEditando === null;
+
+        try {
+            const resultado = await enviarPeticion(
+                formulario.action,
+                new FormData(formulario)
+            );
+
+            const usuario = resultado.usuario;
+
+            if (creando) {
+
+                crearFila(usuario);
+
+            } else {
+
+                actualizarFila(filaEditando, usuario);
+                ordenarFilas();
+            }
+
+            modalUsuario.hide();
+
+            mostrarMensaje(resultado.message);
+
+        } catch (error) {
+
+            mostrarErrorModal(error.message);
+
+        } finally {
+
+            guardando = false;
+            btnGuardar.disabled = false;
+        }
+    });
+
+
+    // ==========================================
+    // EDITAR / BLOQUEAR / ELIMINAR
+    // ==========================================
+
+    tabla.addEventListener('click', async function (evento) {
+
+        const editar = evento.target.closest('.btn-editar');
+
+        if (editar) {
+            abrirModalEditar(editar.closest('tr[data-id]'));
+            return;
+        }
+
+        const botonEstado = evento.target.closest('.btn-estado');
+        const botonEliminar = evento.target.closest('.btn-eliminar');
+
+        if (!botonEstado && !botonEliminar) return;
+
+        const boton = botonEstado || botonEliminar;
+
+        if (boton.disabled) return;
+
+        const fila = boton.closest('tr[data-id]');
+
+        const username = fila.querySelector(
+            '.celda-username'
+        ).textContent.trim();
+
+        if (botonEstado) {
+
+            const bloquear =
+                boton.textContent.trim() === 'Bloquear';
+
+            const confirmado = confirm(
+                bloquear
+                    ? `¿Deseas bloquear al usuario ${username}?`
+                    : `¿Deseas desbloquear al usuario ${username}?`
+            );
+
+            if (!confirmado) return;
+
+            boton.disabled = true;
+
+            try {
+
+                const resultado = await enviarPeticion(
+                    boton.dataset.url
+                );
+
+                const activo = resultado.usuario.activo;
+
+                const celdaEstado = fila.querySelector(
+                    '.celda-estado'
+                );
+
+                celdaEstado.replaceChildren();
+
+                celdaEstado.appendChild(
+                    crearBadge(
+                        activo ? 'Activo' : 'Bloqueado',
+                        activo ? 'bg-success' : 'bg-danger'
+                    )
+                );
+
+                boton.innerHTML = activo
+                    ? '<i class="fas fa-lock me-1"></i> Bloquear'
+                    : '<i class="fas fa-lock-open me-1"></i> Desbloquear';
+
+                mostrarMensaje(resultado.message);
+
+            } catch (error) {
+
+                mostrarMensaje(error.message, 'danger');
+
+            } finally {
+
+                boton.disabled = false;
+            }
+        }
+
+        if (botonEliminar) {
+
+            if (!confirm(
+                `¿Estás seguro de eliminar al usuario ${username}?`
+            )) {
+                return;
+            }
+
+            boton.disabled = true;
+
+            try {
+
+                const resultado = await enviarPeticion(
+                    boton.dataset.url
+                );
+
+                fila.remove();
+
+                actualizarNumeracion();
+
+                mostrarMensaje(resultado.message);
+
+            } catch (error) {
+
+                mostrarMensaje(error.message, 'danger');
+                boton.disabled = false;
+            }
+        }
+    });
+
+});
+</script>
 
 {% endblock panel_content %}
