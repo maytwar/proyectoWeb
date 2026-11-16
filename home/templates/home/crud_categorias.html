@@ -1,91 +1,54 @@
+
 {% extends 'partials/sidebar_base.html' %}
 {% load static %}
 
 {% block title %}Categorías | CANACO Noticias{% endblock %}
 
 {% block panel_content %}
-
 <div class="bg-white rounded shadow-sm p-4">
 
     <div class="mb-4">
-        <h2 class="fw-bold mb-1">
-            Administrar Categorías
-        </h2>
-
+        <h2 class="fw-bold mb-1">Administrar Categorías</h2>
         <p class="text-muted mb-0">
             Crea y administra las categorías de las noticias.
         </p>
     </div>
 
+    <!-- Mensajes AJAX -->
+    <div id="mensajeAjax" role="status" aria-live="polite"></div>
 
-    {% if messages %}
-        {% for message in messages %}
-
-            <div class="alert alert-{{ message.tags }}
-                        alert-dismissible fade show"
-                 role="alert">
-
-                {{ message }}
-
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert">
-                </button>
-
-            </div>
-
-        {% endfor %}
-    {% endif %}
-
-
-    <!-- Agregar categoría -->
-
+    <!-- Formulario para agregar -->
     <div class="card border-0 bg-light mb-4">
-
         <div class="card-body">
-
-            <form method="POST" class="row g-2">
-
+            <form id="formAgregar" method="POST" class="row g-2">
                 {% csrf_token %}
 
                 <div class="col-md-9">
-
-                    <input
-                        type="text"
-                        name="nombre"
-                        class="form-control"
-                        placeholder="Nueva categoría"
-                        required>
-
+                    <input type="text"
+                           name="nombre"
+                           id="nombreCategoria"
+                           class="form-control"
+                           placeholder="Nueva categoría"
+                           maxlength="150"
+                           required>
                 </div>
 
                 <div class="col-md-3 d-grid">
-
                     <button type="submit"
-                            class="btn btn-primary">
-
+                            class="btn btn-primary"
+                            id="btnAgregar">
                         <i class="fas fa-plus me-2"></i>
                         Agregar
-
                     </button>
-
                 </div>
-
             </form>
-
         </div>
-
     </div>
 
-
-    <!-- Tabla -->
-
+    <!-- Tabla de categorías -->
     <div class="table-responsive">
-
         <table class="table table-striped table-hover align-middle">
-
             <thead class="table-primary">
-
                 <tr>
                     <th>#</th>
                     <th>Nombre</th>
@@ -93,18 +56,20 @@
                     <th>Fecha</th>
                     <th>Acciones</th>
                 </tr>
-
             </thead>
 
-            <tbody>
-
+            <tbody id="tablaCategorias">
                 {% for categoria in categorias %}
+                <tr id="categoria-{{ categoria.id }}"
+                    data-id="{{ categoria.id }}"
+                    data-editar-url="{% url 'home:editarCategoria' categoria.id %}"
+                    data-eliminar-url="{% url 'home:eliminarCategoria' categoria.id %}">
 
-                <tr>
+                    <td class="numero-fila">{{ forloop.counter }}</td>
 
-                    <td>{{ forloop.counter }}</td>
-
-                    <td>{{ categoria.nombre }}</td>
+                    <td class="nombre-categoria">
+                        {{ categoria.nombre }}
+                    </td>
 
                     <td>
                         {% if categoria.fk_user %}
@@ -114,68 +79,326 @@
                         {% endif %}
                     </td>
 
-                    <td>
-                        {{ categoria.createdat|date:"Y-m-d H:i" }}
-                    </td>
+                    <td>{{ categoria.createdat|date:"Y-m-d H:i" }}</td>
 
                     <td>
-
                         <div class="d-flex gap-1">
-
-                            <!-- EDITAR CATEGORÍA -->
-                            <a href="{% url 'home:editarCategoria' categoria.id %}"
-                            class="btn btn-info btn-sm">
-
+                            <button type="button"
+                                    class="btn btn-info btn-sm btn-editar">
                                 <i class="fas fa-edit me-1"></i>
                                 Editar
+                            </button>
 
-                            </a>
-
-
-                            <!-- ELIMINAR CATEGORÍA -->
-                            <form method="POST"
-                                action="{% url 'home:eliminarCategoria' categoria.id %}"
-                                onsubmit="return confirm('¿Estás segura de que deseas eliminar esta categoría?');">
-
-                                {% csrf_token %}
-
-                                <button type="submit"
-                                        class="btn btn-danger btn-sm">
-
-                                    <i class="fas fa-trash-alt me-1"></i>
-                                    Eliminar
-
-                                </button>
-
-                            </form>
-
+                            <button type="button"
+                                    class="btn btn-danger btn-sm btn-eliminar">
+                                <i class="fas fa-trash-alt me-1"></i>
+                                Eliminar
+                            </button>
                         </div>
-
-                    </td>
-
-                </tr>
-
-                {% empty %}
-
-                <tr>
-                    <td colspan="5"
-                        class="text-center text-muted py-4">
-
-                        <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
-
-                        No hay categorías aún.
-
                     </td>
                 </tr>
-
                 {% endfor %}
-
             </tbody>
-
         </table>
 
+        <p id="sinCategorias"
+           class="text-center text-muted py-4"
+           {% if categorias %}hidden{% endif %}>
+            No hay categorías aún.
+        </p>
     </div>
-
 </div>
+
+<!-- Modal para editar -->
+<div class="modal fade"
+     id="modalEditarCategoria"
+     tabindex="-1"
+     aria-labelledby="tituloModalEditar"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg"
+             style="border-radius: 16px;">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="tituloModalEditar">
+                    Editar categoría
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <form id="formEditar" method="POST">
+                {% csrf_token %}
+
+                <div class="modal-body">
+                    <label for="nombreEditar"
+                           class="form-label fw-semibold">
+                        Nombre de la categoría
+                    </label>
+
+                    <input type="text"
+                           class="form-control"
+                           name="nombre"
+                           id="nombreEditar"
+                           maxlength="150"
+                           required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary"
+                            id="btnGuardarEdicion">
+                        Guardar cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const tabla = document.getElementById("tablaCategorias");
+    const formAgregar = document.getElementById("formAgregar");
+    const formEditar = document.getElementById("formEditar");
+    const mensaje = document.getElementById("mensajeAjax");
+    const modalElemento = document.getElementById("modalEditarCategoria");
+    const modalEditar = new bootstrap.Modal(modalElemento);
+    const sinCategorias = document.getElementById("sinCategorias");
+
+    const csrfToken = formAgregar.querySelector(
+        'input[name="csrfmiddlewaretoken"]'
+    ).value;
+
+    const urlCrear = "{% url 'home:crudCategorias' %}";
+    const urlEditarBase = "{% url 'home:editarCategoria' 0 %}";
+    const urlEliminarBase = "{% url 'home:eliminarCategoria' 0 %}";
+
+    function urlConId(base, id) {
+        return base.replace(/0\/$/, id + "/");
+    }
+
+    function mostrarMensaje(texto, tipo = "success") {
+        mensaje.replaceChildren();
+
+        const alerta = document.createElement("div");
+        alerta.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alerta.setAttribute("role", "alert");
+
+        const contenido = document.createElement("span");
+        contenido.textContent = texto;
+
+        const cerrar = document.createElement("button");
+        cerrar.type = "button";
+        cerrar.className = "btn-close";
+        cerrar.setAttribute("data-bs-dismiss", "alert");
+        cerrar.setAttribute("aria-label", "Cerrar");
+
+        alerta.append(contenido, cerrar);
+        mensaje.appendChild(alerta);
+    }
+
+    async function solicitar(url, opciones = {}) {
+        const respuesta = await fetch(url, {
+            credentials: "same-origin",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrfToken,
+                ...(opciones.headers || {})
+            },
+            ...opciones
+        });
+
+        const tipo = respuesta.headers.get("content-type") || "";
+
+        if (!tipo.includes("application/json")) {
+            throw new Error(
+                "La sesión pudo haber expirado. Actualiza la página e inicia sesión."
+            );
+        }
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok || !datos.success) {
+            throw new Error(datos.message || "Ocurrió un error.");
+        }
+
+        return datos;
+    }
+
+    function actualizarNumeracion() {
+        const filas = tabla.querySelectorAll("tr[data-id]");
+
+        filas.forEach((fila, indice) => {
+            fila.querySelector(".numero-fila").textContent = indice + 1;
+        });
+
+        sinCategorias.hidden = filas.length > 0;
+    }
+
+    function crearFila(categoria) {
+        const fila = document.createElement("tr");
+        fila.id = `categoria-${categoria.id}`;
+        fila.dataset.id = categoria.id;
+        fila.dataset.editarUrl = urlConId(urlEditarBase, categoria.id);
+        fila.dataset.eliminarUrl = urlConId(urlEliminarBase, categoria.id);
+
+        const numero = document.createElement("td");
+        numero.className = "numero-fila";
+
+        const nombre = document.createElement("td");
+        nombre.className = "nombre-categoria";
+        nombre.textContent = categoria.nombre;
+
+        const usuario = document.createElement("td");
+        usuario.textContent = categoria.usuario || "-";
+
+        const fecha = document.createElement("td");
+        fecha.textContent = categoria.fecha;
+
+        const acciones = document.createElement("td");
+        const grupo = document.createElement("div");
+        grupo.className = "d-flex gap-1";
+
+        const editar = document.createElement("button");
+        editar.type = "button";
+        editar.className = "btn btn-info btn-sm btn-editar";
+        editar.innerHTML = '<i class="fas fa-edit me-1"></i> Editar';
+
+        const eliminar = document.createElement("button");
+        eliminar.type = "button";
+        eliminar.className = "btn btn-danger btn-sm btn-eliminar";
+        eliminar.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Eliminar';
+
+        grupo.append(editar, eliminar);
+        acciones.appendChild(grupo);
+
+        fila.append(numero, nombre, usuario, fecha, acciones);
+
+        return fila;
+    }
+
+    // CREAR CATEGORÍA
+    formAgregar.addEventListener("submit", async function (evento) {
+        evento.preventDefault();
+
+        const boton = document.getElementById("btnAgregar");
+        boton.disabled = true;
+
+        try {
+            const datos = await solicitar(urlCrear, {
+                method: "POST",
+                body: new FormData(formAgregar)
+            });
+
+            tabla.prepend(crearFila(datos.categoria));
+            formAgregar.reset();
+            actualizarNumeracion();
+            mostrarMensaje(datos.message);
+
+        } catch (error) {
+            mostrarMensaje(error.message, "danger");
+        } finally {
+            boton.disabled = false;
+        }
+    });
+
+    // EDITAR O ELIMINAR
+    tabla.addEventListener("click", async function (evento) {
+        const boton = evento.target.closest("button");
+        if (!boton) return;
+
+        const fila = boton.closest("tr[data-id]");
+        if (!fila) return;
+
+        if (boton.classList.contains("btn-editar")) {
+            boton.disabled = true;
+
+            try {
+                const datos = await solicitar(fila.dataset.editarUrl);
+
+                formEditar.dataset.id = fila.dataset.id;
+                formEditar.action = fila.dataset.editarUrl;
+
+                document.getElementById("nombreEditar").value =
+                    datos.categoria.nombre;
+
+                modalEditar.show();
+
+            } catch (error) {
+                mostrarMensaje(error.message, "danger");
+            } finally {
+                boton.disabled = false;
+            }
+        }
+
+        if (boton.classList.contains("btn-eliminar")) {
+            if (!confirm("¿Deseas eliminar esta categoría?")) return;
+
+            boton.disabled = true;
+
+            try {
+                const datos = await solicitar(fila.dataset.eliminarUrl, {
+                    method: "POST",
+                    body: new FormData()
+                });
+
+                fila.remove();
+                actualizarNumeracion();
+                mostrarMensaje(datos.message);
+
+            } catch (error) {
+                mostrarMensaje(error.message, "danger");
+                boton.disabled = false;
+            }
+        }
+    });
+
+    // GUARDAR EDICIÓN
+    formEditar.addEventListener("submit", async function (evento) {
+        evento.preventDefault();
+
+        const boton = document.getElementById("btnGuardarEdicion");
+        boton.disabled = true;
+
+        try {
+            const datos = await solicitar(formEditar.action, {
+                method: "POST",
+                body: new FormData(formEditar)
+            });
+
+            const fila = document.getElementById(
+                `categoria-${datos.categoria.id}`
+            );
+
+            if (fila) {
+                fila.querySelector(".nombre-categoria").textContent =
+                    datos.categoria.nombre;
+            }
+
+            modalEditar.hide();
+            mostrarMensaje(datos.message);
+
+        } catch (error) {
+            mostrarMensaje(error.message, "danger");
+        } finally {
+            boton.disabled = false;
+        }
+    });
+
+    actualizarNumeracion();
+});
+</script>
 
 {% endblock panel_content %}
