@@ -1,3 +1,4 @@
+
 FROM python:3.13-slim
 
 WORKDIR /app
@@ -14,6 +15,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+
+# Recopilar archivos estáticos durante la construcción
+RUN DJANGO_SETTINGS_MODULE=canaco.settings \
+    python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
